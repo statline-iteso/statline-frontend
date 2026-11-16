@@ -51,9 +51,10 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
       - name: Trivy (fail on HIGH/CRITICAL)
-        uses: aquasecurity/trivy-action@v0.33.1
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: statline/web:ci
+          version: v0.76.1
           severity: HIGH,CRITICAL
           ignore-unfixed: true
           exit-code: "1"
