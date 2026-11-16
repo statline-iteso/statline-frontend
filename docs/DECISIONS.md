@@ -1,0 +1,20 @@
+# Decisions, Limitations and Future Work
+
+| ID   | Date       | Decision                                                                                                                                   | Status                       |
+| ---- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------- |
+| D-01 | 2026-11-16 | React 18 + Vite + TypeScript + Tailwind + TanStack Query + Recharts (proposal §3.1)                                                        | Decided                      |
+| D-02 | 2026-11-16 | Same-origin API through the Ingress (`/api`), Vite proxy locally; no CORS                                                                  | Decided                      |
+| D-03 | 2026-11-16 | Tokens in localStorage with transparent refresh                                                                                            | Decided (accepted trade-off) |
+| D-04 | 2026-11-16 | Filters and pagination in the URL                                                                                                          | Decided                      |
+| D-05 | 2026-11-16 | Tests render the real route table with `MemoryRouter` + `useRoutes` (the data router's `Request` objects clash with jsdom's `AbortSignal`) | Decided                      |
+| D-06 | 2026-11-16 | Static build served by `nginx-unprivileged` on 8080                                                                                        | Decided                      |
+
+## Limitations
+
+- localStorage tokens are readable by any script on the origin; an httpOnly refresh cookie would be safer (needs a backend change).
+- Dates show in the viewer's time zone, while `?fecha=` filters a UTC day.
+
+## Future work
+
+- Generate `types.ts` from an OpenAPI spec once the backend publishes one.
+- Playwright smoke test against the deployed staging environment.
