@@ -24,3 +24,11 @@ Types in `src/api/types.ts` mirror the backend responses documented in statline-
 ## 6. Styling
 
 Tailwind utilities; three component classes in `index.css` (`card`, `btn`, `input`); one accent color per sport (`basquetbol`, `americano`, `futbol`); dark mode follows the OS.
+
+## 7. CI/CD
+
+- **CI** (`ci.yml`, every push and PR): lint, format, types, Vitest with the 70 % gate, production build, nginx image build, Trivy (fails on HIGH/CRITICAL).
+- **CD** (`cd.yml`, pushes to `develop` and `main`, and `vX.Y.Z` tags): builds `linux/amd64` `statline/web`, pushes it to Docker Hub as `statline/web:<short-sha>` (7 chars) and, on tags, `statline/web:vX.Y.Z`, scans the pushed image with Trivy, then sends a `repository_dispatch` `bump-image` to `statline-iteso/statline-infra`.
+- **Environment mapping:** `develop` → staging, `main` and tags → prod. Infra commits the tag into `gitops/charts/statline/values-<env>.yaml`; Argo CD syncs from there.
+- **Dispatch payload:** `{"event_type":"bump-image","client_payload":{"env":"staging|prod","images":{"web":"<tag>"},"source_repo":"statline-iteso/statline-frontend","sha":"<full sha>"}}`.
+- **Secrets:** `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN` (push), `INFRA_DISPATCH_TOKEN` (fine-grained PAT, `contents: write` on statline-infra, used only for the dispatch).

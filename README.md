@@ -51,3 +51,8 @@ In AKS the Ingress sends `/api` to the api Service and everything else to this i
 | `/comparar`              | Player/team comparison                         | 🕓 SL-45                             |
 | `/pronosticos`           | Forecasts and projections                      | 🕓 SL-46                             |
 | `/listas`, `/alertas`    | Watchlists and alerts                          | 🕓 SL-47                             |
+
+## CI/CD
+
+- `ci.yml` runs on every push and PR. `cd.yml` runs on pushes to `develop` and `main` and on `vX.Y.Z` tags: it pushes `statline/web` to Docker Hub (7-char SHA, plus `vX.Y.Z` on tags), scans it with Trivy and asks statline-infra to deploy the new tag (`develop` → staging, `main` and tags → prod).
+- Required repository secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `INFRA_DISPATCH_TOKEN` (fine-grained PAT with `contents: write` on `statline-iteso/statline-infra`).
