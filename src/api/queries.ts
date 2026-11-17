@@ -7,7 +7,19 @@ import {
 } from "@tanstack/react-query";
 import { useApi } from "../auth/useAuth";
 import type { ApiClient } from "./client";
-import type { Boxscore, Deporte, Jugador, Liga, Paginado, Partido, Posiciones } from "./types";
+import type {
+  Boxscore,
+  Comparacion,
+  Deporte,
+  FormaEquipo,
+  Jugador,
+  Liga,
+  Paginado,
+  Partido,
+  Posiciones,
+  Promedios,
+  Tendencia,
+} from "./types";
 
 /** Query keys in one place so mutations (and the ingestion refresh) can invalidate them. */
 export const keys = {
@@ -17,7 +29,16 @@ export const keys = {
   jugador: (id: string) => ["jugadores", id] as const,
   partidos: (f: { fecha?: string; page: number }) => ["partidos", f] as const,
   boxscore: (partidoId: string) => ["partidos", partidoId, "boxscore"] as const,
+  promedios: (id: string, ultimos?: number) => ["jugadores", id, "promedios", { ultimos }] as const,
+  tendencia: (id: string, metrica: string, n: number) =>
+    ["jugadores", id, "tendencia", { metrica, n }] as const,
+  comparacion: (ids: string[]) => ["jugadores", "comparar", ids] as const,
+  forma: (equipoId: string) => ["equipos", equipoId, "forma"] as const,
 };
+
+/** Player comparison accepts between 2 and 4 players (the API answers 400 otherwise). */
+export const COMPARACION_MIN = 2;
+export const COMPARACION_MAX = 4;
 
 export function useLigas(deporte?: Deporte) {
   const api = useApi();
@@ -68,6 +89,47 @@ export function useBoxscore(partidoId: string | undefined) {
     queryKey: keys.boxscore(partidoId ?? ""),
     queryFn: () => api.get<Boxscore>(`/api/partidos/${partidoId}/boxscore`),
     enabled: Boolean(partidoId),
+  });
+}
+
+/** Averages of a player; `ultimos` limits them to the last N games (all games when omitted). */
+export function usePromedios(id: string | undefined, ultimos?: number) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.promedios(id ?? "", ultimos),
+    queryFn: () => api.get<Promedios>(`/api/jugadores/${id}/promedios`, { ultimos }),
+    enabled: Boolean(id),
+  });
+}
+
+/** Per-game series of one metric, oldest first. Needs the metric key to be chosen. */
+export function useTendencia(id: string | undefined, metrica: string | undefined, n = 10) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.tendencia(id ?? "", metrica ?? "", n),
+    queryFn: () => api.get<Tendencia>(`/api/jugadores/${id}/tendencia`, { metrica, n }),
+    enabled: Boolean(id && metrica),
+  });
+}
+
+/** Averages of 2 to 4 players of the same sport. Disabled outside that range. */
+export function useComparacion(ids: string[]) {
+  const api = useApi();
+  const valido = ids.length >= COMPARACION_MIN && ids.length <= COMPARACION_MAX;
+  return useQuery({
+    queryKey: keys.comparacion(ids),
+    queryFn: () => api.get<Comparacion>("/api/jugadores/comparar", { ids: ids.join(",") }),
+    enabled: valido,
+  });
+}
+
+/** Last finished games of a team as W/D/L letters. */
+export function useFormaEquipo(id: string | undefined) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.forma(id ?? ""),
+    queryFn: () => api.get<FormaEquipo>(`/api/equipos/${id}/forma`),
+    enabled: Boolean(id),
   });
 }
 

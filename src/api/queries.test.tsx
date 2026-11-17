@@ -5,7 +5,13 @@ import { describe, expect, it, vi } from "vitest";
 import { AuthProvider } from "../auth/AuthProvider";
 import { useApi } from "../auth/useAuth";
 import { fakeFetch, memoryTokens } from "../test/render";
-import { useApiMutation } from "./queries";
+import {
+  useApiMutation,
+  useComparacion,
+  useFormaEquipo,
+  usePromedios,
+  useTendencia,
+} from "./queries";
 
 function setup(fetchFn: typeof fetch) {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -86,5 +92,83 @@ describe("useApiMutation", () => {
       await result.current.mutateAsync("l1").catch(() => undefined);
     });
     expect(spy).not.toHaveBeenCalled();
+  });
+});
+
+describe("jugadores y equipos queries", () => {
+  const promedios = {
+    jugador: { id: "j1", nombre: "N. Jokic", deporte: "BASQUETBOL", posicion: "C" },
+    ultimos: 5,
+    partidos: 5,
+    minutosPromedio: 34,
+    promedios: { puntos: 25.3 },
+  };
+  const tendencia = { jugadorId: "j1", metrica: "puntos", n: 10, serie: [] };
+  const comparacion = {
+    deporte: "BASQUETBOL",
+    jugadores: [{ jugador: { id: "j1" }, partidos: 5, minutosPromedio: 34, promedios: {} }],
+  };
+  const forma = { equipoId: "e1", forma: "GPGEG", partidos: ["p5", "p4", "p3", "p2", "p1"] };
+
+  it("usePromedios stays disabled without a player and sends the window when given", async () => {
+    const fetchFn = fakeFetch({
+      "GET /api/jugadores/j1/promedios": () => ({ body: promedios }),
+    });
+    const { wrapper } = setup(fetchFn);
+    const sin = renderHook(() => usePromedios(undefined), { wrapper });
+    expect(sin.result.current.fetchStatus).toBe("idle");
+    expect(fetchFn).not.toHaveBeenCalled();
+
+    const { result } = renderHook(() => usePromedios("j1", 5), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(String(fetchFn.mock.calls[0]![0])).toContain("/api/jugadores/j1/promedios?ultimos=5");
+    expect(result.current.data?.partidos).toBe(5);
+  });
+
+  it("useTendencia needs both a player and a metric", async () => {
+    const fetchFn = fakeFetch({
+      "GET /api/jugadores/j1/tendencia": () => ({ body: tendencia }),
+    });
+    const { wrapper } = setup(fetchFn);
+    renderHook(() => useTendencia("j1", undefined, 10), { wrapper });
+    renderHook(() => useTendencia(undefined, "puntos", 10), { wrapper });
+    expect(fetchFn).not.toHaveBeenCalled();
+
+    const { result } = renderHook(() => useTendencia("j1", "puntos", 10), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    const url = new URL(String(fetchFn.mock.calls[0]![0]), "http://localhost");
+    expect(url.searchParams.get("metrica")).toBe("puntos");
+    expect(url.searchParams.get("n")).toBe("10");
+  });
+
+  it("useComparacion is enabled only with 2 to 4 players", async () => {
+    const fetchFn = fakeFetch({
+      "GET /api/jugadores/comparar": () => ({ body: comparacion }),
+    });
+    const { wrapper } = setup(fetchFn);
+    const uno = renderHook(() => useComparacion(["j1"]), { wrapper });
+    const cinco = renderHook(() => useComparacion(["a", "b", "c", "d", "e"]), { wrapper });
+    expect(uno.result.current.fetchStatus).toBe("idle");
+    expect(cinco.result.current.fetchStatus).toBe("idle");
+    expect(fetchFn).not.toHaveBeenCalled();
+
+    const { result } = renderHook(() => useComparacion(["j1", "j2"]), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(
+      new URL(String(fetchFn.mock.calls[0]![0]), "http://localhost").searchParams.get("ids"),
+    ).toBe("j1,j2");
+  });
+
+  it("useFormaEquipo fetches the form of a team", async () => {
+    const fetchFn = fakeFetch({
+      "GET /api/equipos/e1/forma": () => ({ body: forma }),
+    });
+    const { wrapper } = setup(fetchFn);
+    const sin = renderHook(() => useFormaEquipo(undefined), { wrapper });
+    expect(sin.result.current.fetchStatus).toBe("idle");
+
+    const { result } = renderHook(() => useFormaEquipo("e1"), { wrapper });
+    await waitFor(() => expect(result.current.isSuccess).toBe(true));
+    expect(result.current.data?.forma).toBe("GPGEG");
   });
 });
