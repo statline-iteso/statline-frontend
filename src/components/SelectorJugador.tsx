@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useJugadores } from "../api/queries";
 import type { Jugador } from "../api/types";
 import { ErrorMensaje } from "./ui";
@@ -18,7 +18,13 @@ export function SelectorJugador({
   id?: string;
 }) {
   const [texto, setTexto] = useState("");
-  const q = texto.trim() || undefined;
+  const [buscado, setBuscado] = useState("");
+  // Debounce: one request per pause in typing, not per keystroke.
+  useEffect(() => {
+    const t = setTimeout(() => setBuscado(texto), 300);
+    return () => clearTimeout(t);
+  }, [texto]);
+  const q = buscado.trim() || undefined;
   const jugadores = useJugadores({ q, page: 1 });
 
   return (

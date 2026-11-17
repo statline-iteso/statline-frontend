@@ -74,7 +74,7 @@ function Contenido({ lista }: { lista: ListaSeguimiento }) {
               className="input mt-1"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              maxLength={121}
+              maxLength={120}
               aria-invalid={nombreError ? true : undefined}
             />
           </label>
