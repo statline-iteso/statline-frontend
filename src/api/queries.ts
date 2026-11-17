@@ -7,7 +7,21 @@ import {
 } from "@tanstack/react-query";
 import { useApi } from "../auth/useAuth";
 import type { ApiClient } from "./client";
-import type { Boxscore, Deporte, Jugador, Liga, Paginado, Partido, Posiciones } from "./types";
+import type {
+  ActualizarAlerta,
+  Alerta,
+  Boxscore,
+  CrearAlerta,
+  Deporte,
+  ElementoLista,
+  EquipoRef,
+  Jugador,
+  Liga,
+  ListaSeguimiento,
+  Paginado,
+  Partido,
+  Posiciones,
+} from "./types";
 
 /** Query keys in one place so mutations (and the ingestion refresh) can invalidate them. */
 export const keys = {
@@ -17,6 +31,10 @@ export const keys = {
   jugador: (id: string) => ["jugadores", id] as const,
   partidos: (f: { fecha?: string; page: number }) => ["partidos", f] as const,
   boxscore: (partidoId: string) => ["partidos", partidoId, "boxscore"] as const,
+  equipos: () => ["equipos"] as const,
+  listas: (f: { page: number }) => ["listas", f] as const,
+  lista: (id: string) => ["listas", id] as const,
+  alertas: (f: { page: number }) => ["alertas", f] as const,
 };
 
 export function useLigas(deporte?: Deporte) {
@@ -69,6 +87,104 @@ export function useBoxscore(partidoId: string | undefined) {
     queryFn: () => api.get<Boxscore>(`/api/partidos/${partidoId}/boxscore`),
     enabled: Boolean(partidoId),
   });
+}
+
+export function useEquipos() {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.equipos(),
+    // The backend has no name filter for equipos; a league has far fewer than 100 teams.
+    queryFn: () => api.get<Paginado<EquipoRef>>("/api/equipos", { pageSize: 100 }),
+  });
+}
+
+export function useListas(f: { page: number }) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.listas(f),
+    queryFn: () => api.get<Paginado<ListaSeguimiento>>("/api/listas", { ...f, pageSize: 20 }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** GET /api/listas/:id, which includes `elementos`. */
+export function useLista(id: string) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.lista(id),
+    queryFn: () => api.get<ListaSeguimiento>(`/api/listas/${id}`),
+  });
+}
+
+export function useAlertas(f: { page: number }) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.alertas(f),
+    queryFn: () => api.get<Paginado<Alerta>>("/api/alertas", { ...f, pageSize: 20 }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/*
+ * Writes. Lists invalidate the whole ["listas"] / ["alertas"] prefix; element changes only
+ * refresh the list they belong to.
+ */
+
+export function useCrearLista() {
+  return useApiMutation(
+    (api, body: { nombre: string }) => api.post<ListaSeguimiento>("/api/listas", body),
+    [["listas"]],
+  );
+}
+
+export function useRenombrarLista() {
+  return useApiMutation(
+    (api, v: { id: string; nombre: string }) =>
+      api.put<ListaSeguimiento>(`/api/listas/${v.id}`, { nombre: v.nombre }),
+    [["listas"]],
+  );
+}
+
+export function useEliminarLista() {
+  return useApiMutation((api, id: string) => api.delete(`/api/listas/${id}`), [["listas"]]);
+}
+
+export function useAgregarElemento() {
+  return useApiMutation(
+    (api, v: { listaId: string; tipo: ElementoLista["tipo"]; refId: string }) =>
+      api.post<ElementoLista>(`/api/listas/${v.listaId}/elementos`, {
+        tipo: v.tipo,
+        refId: v.refId,
+      }),
+    (v) => [keys.lista(v.listaId)],
+  );
+}
+
+export function useQuitarElemento() {
+  return useApiMutation(
+    (api, v: { listaId: string; refId: string }) =>
+      api.delete(`/api/listas/${v.listaId}/elementos/${v.refId}`),
+    (v) => [keys.lista(v.listaId)],
+  );
+}
+
+export function useCrearAlerta() {
+  return useApiMutation(
+    (api, body: CrearAlerta) => api.post<Alerta>("/api/alertas", body),
+    [["alertas"]],
+  );
+}
+
+export function useActualizarAlerta() {
+  return useApiMutation(
+    (api, v: { id: string; body: ActualizarAlerta }) =>
+      api.put<Alerta>(`/api/alertas/${v.id}`, v.body),
+    [["alertas"]],
+  );
+}
+
+export function useEliminarAlerta() {
+  return useApiMutation((api, id: string) => api.delete(`/api/alertas/${id}`), [["alertas"]]);
 }
 
 /**

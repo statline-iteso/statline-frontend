@@ -26,6 +26,12 @@ const JugadorDetallePage = lazy(() =>
     default: m.JugadorDetallePage,
   })),
 );
+const ListasPage = lazy(() =>
+  import("../features/listas/ListasPage").then((m) => ({ default: m.ListasPage })),
+);
+const ListaDetallePage = lazy(() =>
+  import("../features/listas/ListaDetallePage").then((m) => ({ default: m.ListaDetallePage })),
+);
 
 const s = (node: ReactNode) => <Suspense fallback={<Cargando />}>{node}</Suspense>;
 
@@ -46,7 +52,9 @@ export const routes: RouteObject[] = [
       { path: "partidos/:id", element: s(<BoxscorePage />) },
       { path: "jugadores", element: s(<JugadoresPage />) },
       { path: "jugadores/:id", element: s(<JugadorDetallePage />) },
-      // TODO(SL-45..SL-47): comparar, pronosticos, listas, alertas.
+      { path: "listas", element: s(<ListasPage />) },
+      { path: "listas/:id", element: s(<ListaDetallePage />) },
+      // TODO(SL-45, SL-46, SL-47): comparar, pronosticos, alertas.
       { path: "*", element: <NoEncontrado /> },
     ],
   },

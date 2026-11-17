@@ -239,8 +239,9 @@ export interface ElementoLista {
 export const TIPOS_ALERTA = ["LESION", "UMBRAL", "INICIO_PARTIDO"] as const;
 export type TipoAlerta = (typeof TIPOS_ALERTA)[number];
 
-// Operator set is not documented in api.md; ">=" is the only one shown in the Prisma comment.
-export type Operador = ">" | ">=" | "<" | "<=" | "=";
+/** Same set as the backend's OperadorSchema (services/api/src/routes/schemas.ts). */
+export const OPERADORES = [">", ">=", "<", "<=", "="] as const;
+export type Operador = (typeof OPERADORES)[number];
 
 /** Stored in Alerta.condicion (JSON); only meaningful for UMBRAL alerts. */
 export interface CondicionAlerta {
@@ -248,6 +249,21 @@ export interface CondicionAlerta {
   operador: Operador;
   valor: number;
 }
+
+/**
+ * Body of POST /api/alertas. Required fields depend on `tipo`: LESION and UMBRAL need `jugadorId`
+ * (UMBRAL also `condicion`), INICIO_PARTIDO needs `jugadorId` or `equipoId`.
+ */
+export interface CrearAlerta {
+  tipo: TipoAlerta;
+  jugadorId?: string;
+  equipoId?: string;
+  condicion?: CondicionAlerta;
+  activa?: boolean;
+}
+
+/** PUT /api/alertas/:id accepts `{ activa }` alone (toggle) or a full definition. */
+export type ActualizarAlerta = { activa: boolean } | CrearAlerta;
 
 export interface Alerta {
   id: string;

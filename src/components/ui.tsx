@@ -23,8 +23,8 @@ export function Cargando({ texto = "Cargando…" }: { texto?: string }) {
   );
 }
 
-export function ErrorMensaje({ error }: { error: unknown }) {
-  const msg = error instanceof Error ? error.message : "Error inesperado";
+export function ErrorMensaje({ error, texto }: { error: unknown; texto?: string }) {
+  const msg = texto ?? (error instanceof Error ? error.message : "Error inesperado");
   return (
     <p
       role="alert"

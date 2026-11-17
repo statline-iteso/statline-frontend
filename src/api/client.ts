@@ -5,6 +5,8 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly code: string,
     message: string,
+    /** Field-level details of a 400 VALIDATION_ERROR, as sent by the backend. */
+    public readonly details?: unknown,
   ) {
     super(message);
   }
@@ -101,6 +103,7 @@ export function createApiClient(opts: {
         res.status,
         err?.error.code ?? "HTTP_ERROR",
         err?.error.message ?? `HTTP ${res.status}`,
+        err?.error.details,
       );
     }
     if (res.status === 204) return undefined as T;
