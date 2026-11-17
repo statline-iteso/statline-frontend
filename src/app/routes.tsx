@@ -27,6 +27,10 @@ const JugadorDetallePage = lazy(() =>
   })),
 );
 
+const CompararPage = lazy(() =>
+  import("../features/comparar/CompararPage").then((m) => ({ default: m.CompararPage })),
+);
+
 const s = (node: ReactNode) => <Suspense fallback={<Cargando />}>{node}</Suspense>;
 
 export const routes: RouteObject[] = [
@@ -46,7 +50,8 @@ export const routes: RouteObject[] = [
       { path: "partidos/:id", element: s(<BoxscorePage />) },
       { path: "jugadores", element: s(<JugadoresPage />) },
       { path: "jugadores/:id", element: s(<JugadorDetallePage />) },
-      // TODO(SL-45..SL-47): comparar, pronosticos, listas, alertas.
+      { path: "comparar", element: s(<CompararPage />) },
+      // TODO(SL-46..SL-47): pronosticos, listas, alertas.
       { path: "*", element: <NoEncontrado /> },
     ],
   },
