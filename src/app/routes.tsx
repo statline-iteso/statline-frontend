@@ -18,6 +18,11 @@ const PartidosPage = lazy(() =>
 const JugadoresPage = lazy(() =>
   import("../features/jugadores/JugadoresPage").then((m) => ({ default: m.JugadoresPage })),
 );
+const PronosticosPage = lazy(() =>
+  import("../features/pronosticos/PronosticosPage").then((m) => ({
+    default: m.PronosticosPage,
+  })),
+);
 const BoxscorePage = lazy(() =>
   import("../features/partidos/BoxscorePage").then((m) => ({ default: m.BoxscorePage })),
 );
@@ -46,7 +51,8 @@ export const routes: RouteObject[] = [
       { path: "partidos/:id", element: s(<BoxscorePage />) },
       { path: "jugadores", element: s(<JugadoresPage />) },
       { path: "jugadores/:id", element: s(<JugadorDetallePage />) },
-      // TODO(SL-45..SL-47): comparar, pronosticos, listas, alertas.
+      { path: "pronosticos", element: s(<PronosticosPage />) },
+      // TODO(SL-45, SL-47): comparar, listas, alertas.
       { path: "*", element: <NoEncontrado /> },
     ],
   },
