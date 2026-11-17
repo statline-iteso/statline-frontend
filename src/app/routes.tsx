@@ -32,6 +32,9 @@ const ListasPage = lazy(() =>
 const ListaDetallePage = lazy(() =>
   import("../features/listas/ListaDetallePage").then((m) => ({ default: m.ListaDetallePage })),
 );
+const AlertasPage = lazy(() =>
+  import("../features/alertas/AlertasPage").then((m) => ({ default: m.AlertasPage })),
+);
 
 const s = (node: ReactNode) => <Suspense fallback={<Cargando />}>{node}</Suspense>;
 
@@ -54,7 +57,8 @@ export const routes: RouteObject[] = [
       { path: "jugadores/:id", element: s(<JugadorDetallePage />) },
       { path: "listas", element: s(<ListasPage />) },
       { path: "listas/:id", element: s(<ListaDetallePage />) },
-      // TODO(SL-45, SL-46, SL-47): comparar, pronosticos, alertas.
+      { path: "alertas", element: s(<AlertasPage />) },
+      // TODO(SL-45, SL-46): comparar, pronosticos.
       { path: "*", element: <NoEncontrado /> },
     ],
   },
