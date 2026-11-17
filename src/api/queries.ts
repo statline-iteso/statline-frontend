@@ -8,6 +8,7 @@ import {
 import { useApi } from "../auth/useAuth";
 import type { ApiClient } from "./client";
 import type {
+  ActivarModeloRespuesta,
   Boxscore,
   Deporte,
   GenerarPronosticosBody,
@@ -208,7 +209,7 @@ export function useGenerarProyecciones() {
 /** ADMIN. Changing the active model changes which predictions and precision figures apply. */
 export function useActivarModelo() {
   return useApiMutation(
-    (api, id: string) => api.post<ModeloPrediccion>(`/api/modelos/${id}/activar`),
+    (api, id: string) => api.post<ActivarModeloRespuesta>(`/api/modelos/${id}/activar`),
     [["modelos"], ...INVALIDAR_PRONOSTICOS, ...INVALIDAR_PROYECCIONES],
   );
 }

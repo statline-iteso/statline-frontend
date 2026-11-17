@@ -187,7 +187,7 @@ export interface ModeloResumen {
   activo: boolean;
 }
 
-/** GET /api/modelos and POST /api/modelos/:id/activar. */
+/** GET /api/modelos. */
 export interface ModeloPrediccion extends ModeloResumen {
   artefactoUri: string;
   entrenadoEn: string;
@@ -287,6 +287,12 @@ export interface GenerarProyeccionesRespuesta {
   modeloId: string;
   generados: number;
   proyecciones: ProyeccionJugador[];
+}
+
+/** POST /api/modelos/:id/activar (predicciones answers only the id and the flag). */
+export interface ActivarModeloRespuesta {
+  modeloId: string;
+  activo: true;
 }
 
 /** POST /api/modelos/reentrenar. */

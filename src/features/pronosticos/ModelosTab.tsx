@@ -16,6 +16,8 @@ export function ModelosTab({ deporte }: { deporte: Deporte }) {
   const reentrenar = useReentrenar();
   const activar = useActivarModelo();
   const [confirmando, setConfirmando] = useState<string | null>(null);
+  // The activar response carries only the id: look the version up in the list.
+  const versionActivada = modelos.data?.data.find((m) => m.id === activar.data?.modeloId)?.version;
 
   return (
     <div className="space-y-6">
@@ -47,7 +49,7 @@ export function ModelosTab({ deporte }: { deporte: Deporte }) {
       <section className="space-y-3">
         <h2 className="text-lg font-semibold">Modelos</h2>
         <div role="status">
-          {activar.isSuccess && `Modelo ${activar.data.version} activado.`}
+          {activar.isSuccess && `Modelo ${versionActivada ?? "seleccionado"} activado.`}
           {activar.isError && <ErrorPronostico error={activar.error} />}
         </div>
         {modelos.isPending ? (

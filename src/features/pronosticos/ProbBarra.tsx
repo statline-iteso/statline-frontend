@@ -1,4 +1,4 @@
-import { porcentaje } from "./util";
+import { porcentajesCerrados } from "./util";
 
 interface Props {
   equipoLocal: string;
@@ -29,8 +29,10 @@ export function ProbBarra({
       : []),
     { clave: "visita", etiqueta: equipoVisita, p: probVisita, color: "bg-amber-500" },
   ];
+  const enteros = porcentajesCerrados(segmentos.map((s) => s.p));
+  const pct = (i: number) => `${enteros[i]}%`;
   const textoAlterno = `Probabilidades: ${segmentos
-    .map((s) => `${s.etiqueta} ${porcentaje(s.p)}`)
+    .map((s, i) => `${s.etiqueta} ${pct(i)}`)
     .join(", ")}`;
 
   return (
@@ -50,11 +52,11 @@ export function ProbBarra({
         ))}
       </div>
       <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-600 dark:text-slate-300">
-        {segmentos.map((s) => (
+        {segmentos.map((s, i) => (
           <li key={s.clave} className="flex items-center gap-1.5">
             <span className={`inline-block h-2.5 w-2.5 rounded-sm ${s.color}`} aria-hidden="true" />
             <span>{s.etiqueta}</span>
-            <span className="font-semibold tabular-nums">{porcentaje(s.p)}</span>
+            <span className="font-semibold tabular-nums">{pct(i)}</span>
           </li>
         ))}
       </ul>

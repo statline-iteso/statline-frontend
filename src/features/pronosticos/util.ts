@@ -22,6 +22,25 @@ export const esSintetico = (version: string) => version.endsWith("-synthetic");
 /** Fraction in [0, 1] as a whole percentage ("62%"). */
 export const porcentaje = (p: number) => `${Math.round(p * 100)}%`;
 
+/**
+ * Whole percentages that add up to 100 (largest remainder), so a bar never reads 99% or 101%.
+ * Input fractions are normalised first; all-zero input yields zeros.
+ */
+export function porcentajesCerrados(ps: number[]): number[] {
+  const total = ps.reduce((a, b) => a + b, 0);
+  if (total <= 0) return ps.map(() => 0);
+  const crudos = ps.map((p) => (p / total) * 100);
+  const base = crudos.map(Math.floor);
+  let resto = 100 - base.reduce((a, b) => a + b, 0);
+  const orden = crudos.map((c, i) => [c - Math.floor(c), i] as const).sort((a, b) => b[0] - a[0]);
+  for (const [, i] of orden) {
+    if (resto <= 0) break;
+    base[i]! += 1;
+    resto -= 1;
+  }
+  return base;
+}
+
 const NUMERO = new Intl.NumberFormat("es-MX", { maximumFractionDigits: 1 });
 export const formatoNumero = (n: number) => NUMERO.format(n);
 

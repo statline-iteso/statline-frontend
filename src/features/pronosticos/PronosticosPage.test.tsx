@@ -430,7 +430,7 @@ describe("modelos tab (ADMIN)", () => {
       "GET /api/modelos": () => ({ body: lista(modelos) }),
       "POST /api/modelos/m2/activar": () => {
         activados.push("m2");
-        return { body: { ...modelos[1], activo: true } };
+        return { body: { modeloId: "m2", activo: true } };
       },
     });
     renderApp({ path: "/pronosticos?tab=modelos", fetchFn, usuario: ADMIN });
@@ -526,3 +526,11 @@ function precisionProyeccionVacia() {
     modelo: { id: "m1", version: "v1.0.0", nombreMetrica: "mae", metricaError: 1 },
   };
 }
+
+describe("porcentajesCerrados", () => {
+  it("always adds up to 100", () => {
+    expect(porcentajesCerrados([0.505, 0.495]).reduce((a, b) => a + b)).toBe(100);
+    expect(porcentajesCerrados([1 / 3, 1 / 3, 1 / 3])).toEqual([34, 33, 33]);
+    expect(porcentajesCerrados([0, 0])).toEqual([0, 0]);
+  });
+});
