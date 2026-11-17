@@ -13,6 +13,7 @@ import type {
 } from "../../api/types";
 import { fakeFetch, renderApp, USUARIO } from "../../test/render";
 import { ProbBarra } from "./ProbBarra";
+import { porcentajesCerrados } from "./util";
 
 const ANALISTA: Usuario = { ...USUARIO, id: "u2", nombre: "Luis", rol: "ANALISTA" };
 const ADMIN: Usuario = { ...USUARIO, id: "u3", nombre: "Root", rol: "ADMIN" };
