@@ -120,28 +120,53 @@ export interface Boxscore {
 }
 
 // ---------------------------------------------------------------------------
-// Jugadores: promedios, tendencia, comparación (SL-27 / SL-45)
-// The API is not implemented yet: these shapes are tentative and must be checked against
-// the backend once SL-27 lands.
+// Jugadores: promedios, tendencia, comparación (SL-27, implemented)
 // ---------------------------------------------------------------------------
 
-/** GET /api/jugadores/:id/promedios. Tentative. */
-export interface Promedios {
-  jugadorId: string;
-  partidos: number;
-  promedios: Record<string, number>;
+export interface JugadorResumen {
+  id: string;
+  nombre: string;
+  deporte: Deporte;
+  posicion: string | null;
 }
 
-/** GET /api/jugadores/:id/tendencia. Tentative. */
+/** Averages by metric key; NFL keys are dotted (`pase.yardas`). null when never reported. */
+export type PromediosPorMetrica = Record<string, number | null>;
+
+/** GET /api/jugadores/:id/promedios?ultimos=N. `ultimos` is null when no window was requested. */
+export interface Promedios {
+  jugador: JugadorResumen;
+  ultimos: number | null;
+  partidos: number;
+  minutosPromedio: number | null;
+  promedios: PromediosPorMetrica;
+}
+
+export interface PuntoTendencia {
+  partidoId: string;
+  fecha: string;
+  valor: number;
+}
+
+/** GET /api/jugadores/:id/tendencia?metrica=&n=. `serie` is ordered oldest first. */
 export interface Tendencia {
   jugadorId: string;
   metrica: string;
-  puntos: { partidoId: string; fecha: string; valor: number }[];
+  n: number;
+  serie: PuntoTendencia[];
 }
 
-/** GET /api/jugadores/comparar?ids=. Tentative. */
+/** One entry of GET /api/jugadores/comparar?ids=a,b. */
+export interface JugadorComparado {
+  jugador: JugadorResumen;
+  partidos: number;
+  minutosPromedio: number | null;
+  promedios: PromediosPorMetrica;
+}
+
 export interface Comparacion {
-  jugadores: { jugador: Jugador; promedios: Record<string, number> }[];
+  deporte: Deporte;
+  jugadores: JugadorComparado[];
 }
 
 // ---------------------------------------------------------------------------
