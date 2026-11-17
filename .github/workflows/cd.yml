@@ -1,7 +1,7 @@
 name: CD
 
-# Proposal §4.3, step 2 for the web image: on develop, main and vX.Y.Z tags, push statline/web
-# to Docker Hub, scan the pushed image with Trivy (fail on HIGH/CRITICAL) and ask statline-infra
+# Proposal §4.3, step 2 for the web image: on develop, main and vX.Y.Z tags, build statline/web,
+# scan it with Trivy (fail on HIGH/CRITICAL), push it to Docker Hub only if clean and ask statline-infra
 # to bump web.image.tag of the matching environment. develop → staging; main and tags → prod.
 # Nothing deploys from here: Argo CD syncs statline-infra.
 
@@ -40,12 +40,13 @@ jobs:
             type=sha,format=short,prefix=
             type=ref,event=tag
 
-      - name: Build and push (linux/amd64, multi-stage nginx)
+      - name: Build (linux/amd64, multi-stage, loaded locally; nothing is pushed yet)
         uses: docker/build-push-action@v6
         with:
           context: .
           platforms: linux/amd64
-          push: true
+          load: true
+          push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
@@ -57,7 +58,7 @@ jobs:
           SHA: ${{ github.sha }}
         run: echo "short=${SHA::7}" >> "$GITHUB_OUTPUT"
 
-      - name: Trivy on the pushed image (fail on HIGH/CRITICAL)
+      - name: Trivy on the local image (fail on HIGH/CRITICAL, before any push)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
           image-ref: statline/web:${{ steps.sha.outputs.short }}
@@ -66,6 +67,16 @@ jobs:
           ignore-unfixed: true
           exit-code: "1"
           format: table
+
+      - name: Push (only reached when the scan passed; layers come from the build cache)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
 
   dispatch:
     name: tell statline-infra which tag to deploy
@@ -81,6 +92,10 @@ jobs:
           SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
+          case "$REF" in
+            refs/tags/*) [[ "$REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] \
+              || { echo "::error::Tag '$REF_NAME' is not strict vX.Y.Z; statline-infra would reject it"; exit 1; } ;;
+          esac
           case "$REF" in
             refs/heads/develop) env=staging; tag="${SHA::7}" ;;
             refs/heads/main)    env=prod;    tag="${SHA::7}" ;;
