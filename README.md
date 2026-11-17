@@ -47,7 +47,7 @@ In AKS the Ingress sends `/api` to the api Service and everything else to this i
 | `/partidos?fecha=`       | Games of a day with score and status           | ✅                                   |
 | `/jugadores?q=&deporte=` | Player search with sport filter and pagination | ✅                                   |
 | `/jugadores/:id`         | Player profile                                 | ✅ (averages and trend: SL-27/SL-45) |
-| `/partidos/:id`          | Box score with charts                          | 🕓 SL-44                             |
+| `/partidos/:id`          | Box score with team tables and leaders chart   | ✅                                   |
 | `/comparar`              | Player/team comparison                         | 🕓 SL-45                             |
 | `/pronosticos`           | Forecasts and projections                      | 🕓 SL-46                             |
 | `/listas`, `/alertas`    | Watchlists and alerts                          | 🕓 SL-47                             |
