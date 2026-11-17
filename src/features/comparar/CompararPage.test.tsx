@@ -1,6 +1,6 @@
 import { screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Comparacion, Jugador, Paginado } from "../../api/types";
 import { fakeFetch, renderApp } from "../../test/render";
 
@@ -121,5 +121,37 @@ describe("CompararPage", () => {
     renderApp({ path: "/comparar?ids=a,b,c,d,e", fetchFn });
     expect(await screen.findByRole("alert")).toHaveTextContent("hasta 4 jugadores");
     expect(fetchFn.mock.calls.some(([u]) => String(u).includes("comparar"))).toBe(false);
+  });
+});
+
+describe("CompararPage sport and signed metrics", () => {
+  it("filters the search by the sport of the first selected player", async () => {
+    const fetchFn = fakeFetch({
+      "GET /api/jugadores/j1": () => ({ body: j1 }),
+      "GET /api/jugadores": () => ({ body: lista }),
+    });
+    renderApp({ path: "/comparar?ids=j1", fetchFn });
+    await screen.findByRole("button", { name: "Quitar N. Jokic" });
+    await vi.waitFor(() =>
+      expect(fetchFn.mock.calls.some(([u]) => String(u).includes("deporte=BASQUETBOL"))).toBe(true),
+    );
+  });
+
+  it("keeps negative metrics out of the radar but in the table", async () => {
+    const neg: Comparacion = {
+      ...comparacion,
+      jugadores: comparacion.jugadores.map((j) => ({
+        ...j,
+        promedios: { puntos: 10, rebotes: 5, asistencias: 3, masMenos: -4 },
+      })),
+    };
+    const fetchFn = fakeFetch({
+      "GET /api/jugadores/comparar": () => ({ body: neg }),
+      "GET /api/jugadores": () => ({ body: lista }),
+    });
+    renderApp({ path: "/comparar?ids=j1,j2", fetchFn });
+    const tabla = await screen.findByRole("table", { name: "Promedios comparados" });
+    expect(within(tabla).getByRole("rowheader", { name: "+/-" })).toBeInTheDocument();
+    expect(screen.getByText(/solo aparecen en la tabla/)).toBeInTheDocument();
   });
 });

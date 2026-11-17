@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { COMPARACION_MAX, COMPARACION_MIN, useComparacion, useJugadores } from "../../api/queries";
+import {
+  COMPARACION_MAX,
+  COMPARACION_MIN,
+  useComparacion,
+  useJugador,
+  useJugadores,
+} from "../../api/queries";
 import type { Comparacion } from "../../api/types";
 import { Cargando, ErrorMensaje, Vacio } from "../../components/ui";
 import { formatearPromedio, nombreDeporte } from "../../lib/format";
@@ -17,9 +23,12 @@ export function CompararPage() {
   const [params, setParams] = useSearchParams();
   const ids = leerIds(params.get("ids"));
   const [texto, setTexto] = useState("");
+  const [nombresAgregados, setNombresAgregados] = useState<Record<string, string>>({});
   const comparacion = useComparacion(ids);
-  // Once the selection has a sport, the search only offers players of that sport.
-  const deporte = comparacion.data?.deporte;
+  // The first selected player fixes the sport: the search only offers players of that sport, so
+  // the API's "same sport" 400 cannot be triggered from the UI.
+  const primero = useJugador(ids[0] ?? "");
+  const deporte = comparacion.data?.deporte ?? (ids[0] ? primero.data?.deporte : undefined);
   const busqueda = useJugadores({ q: texto.trim() || undefined, deporte, page: 1 });
 
   const actualizarIds = (nuevos: string[]) =>
@@ -34,7 +43,10 @@ export function CompararPage() {
     );
 
   const nombreDe = (id: string) =>
-    comparacion.data?.jugadores.find((j) => j.jugador.id === id)?.jugador.nombre ?? id;
+    comparacion.data?.jugadores.find((j) => j.jugador.id === id)?.jugador.nombre ??
+    (id === ids[0] ? primero.data?.nombre : undefined) ??
+    nombresAgregados[id] ??
+    id;
 
   return (
     <div className="space-y-6">
@@ -109,7 +121,10 @@ export function CompararPage() {
                     aria-label={`Agregar ${j.nombre}`}
                     disabled={yaAgregado || lleno}
                     title={lleno ? `Máximo ${COMPARACION_MAX} jugadores` : undefined}
-                    onClick={() => actualizarIds([...ids, j.id])}
+                    onClick={() => {
+                      setNombresAgregados((prev) => ({ ...prev, [j.id]: j.nombre }));
+                      actualizarIds([...ids, j.id]);
+                    }}
                   >
                     {yaAgregado ? "Agregado" : "Agregar"}
                   </button>
@@ -150,6 +165,11 @@ function Comparativa({ data }: { data: Comparacion }) {
     data.jugadores.some((j) => j.promedios[m.clave] !== null && j.promedios[m.clave] !== undefined),
   );
 
+  // Signed metrics (e.g. +/-, rushing yards) have no meaningful 0-100 scale: table only.
+  const metricasRadar = metricas.filter((m) =>
+    data.jugadores.every((j) => (j.promedios[m.clave] ?? 0) >= 0),
+  );
+
   if (metricas.length === 0) {
     return <Vacio texto="Los jugadores seleccionados no tienen promedios para comparar." />;
   }
@@ -157,20 +177,24 @@ function Comparativa({ data }: { data: Comparacion }) {
   return (
     <section className="space-y-6">
       <h2 className="text-lg font-semibold">Comparación · {nombreDeporte(data.deporte)}</h2>
-      <div className="card">
-        <CompararRadar
-          metricas={metricas}
-          jugadores={data.jugadores.map((j) => ({
-            id: j.jugador.id,
-            nombre: j.jugador.nombre,
-            promedios: j.promedios,
-          }))}
-        />
-        <p className="mt-2 text-xs text-slate-500">
-          Cada métrica va de 0 a 100 según el máximo entre los jugadores comparados. Sin dato se
-          dibuja en 0; los valores reales están en la tabla.
-        </p>
-      </div>
+      {metricasRadar.length >= 3 && (
+        <div className="card">
+          <CompararRadar
+            metricas={metricasRadar}
+            jugadores={data.jugadores.map((j) => ({
+              id: j.jugador.id,
+              nombre: j.jugador.nombre,
+              promedios: j.promedios,
+            }))}
+          />
+          <p className="mt-2 text-xs text-slate-500">
+            Cada métrica va de 0 a 100 según el máximo entre los jugadores comparados. Sin dato se
+            dibuja en 0; los valores reales están en la tabla.
+            {metricasRadar.length < metricas.length &&
+              " Las métricas con valores negativos solo aparecen en la tabla."}
+          </p>
+        </div>
+      )}
 
       <div className="card overflow-x-auto p-0">
         <table aria-label="Promedios comparados" className="w-full text-sm">
