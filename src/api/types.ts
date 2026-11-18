@@ -365,3 +365,17 @@ export interface EjecucionIngesta {
   peticionesUsadas: number;
   error: string | null;
 }
+
+// ---------------------------------------------------------------------------
+// Equipos: forma (SL-27, implemented)
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/equipos/:id/forma. `forma` is one letter per recent finished game (G, E, P), oldest
+ * first, e.g. "GPGEG". `partidos` lists the game ids in the same order as `forma`.
+ */
+export interface FormaEquipo {
+  equipoId: string;
+  forma: string;
+  partidos: string[];
+}

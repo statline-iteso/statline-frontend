@@ -34,3 +34,14 @@ export const ETIQUETA_ESTATUS_PARTIDO: Record<EstatusPartido, string> = {
   POSPUESTO: "Pospuesto",
   CANCELADO: "Cancelado",
 };
+
+const FORMATO_CORTO = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" });
+
+/** "14 nov" for chart axes. */
+export const fechaCorta = (iso: string) => FORMATO_CORTO.format(new Date(iso));
+
+/** Averages: integers as-is, decimals with one digit; "–" when the metric was never reported. */
+export function formatearPromedio(valor: number | null | undefined): string {
+  if (valor === null || valor === undefined) return "–";
+  return Number.isInteger(valor) ? String(valor) : valor.toFixed(1);
+}

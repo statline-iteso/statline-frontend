@@ -26,7 +26,7 @@ export function JugadoresProyecciones({
   onPage: (n: number) => void;
 }) {
   const { usuario } = useAuth();
-  const lista = useProyecciones({ jornada, page });
+  const lista = useProyecciones({ deporte, jornada, page });
   const precision = usePrecisionProyecciones(deporte);
   const generar = useGenerarProyecciones();
 
@@ -67,6 +67,7 @@ export function JugadoresProyecciones({
           <ProyeccionesTabla
             deporte={deporte}
             // The endpoint is not filtered by sport: keep the rows whose model belongs to it.
+            // The API filters by sport; this guard only drops rows from a mismatched model.
             filas={lista.data.data.filter((f) => f.modelo.deporte === deporte)}
             total={lista.data.total}
             page={lista.data.page}
