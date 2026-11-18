@@ -1,6 +1,6 @@
 # StatLine — Frontend
 
-**StatLine** is a web platform for unified sports statistics and forecasts across **NBA**, **NFL** and **Liga MX**. This repository is the single-page app: standings, games by date, player search and profiles, box scores, player profiles and comparisons, and _(planned)_ forecasts, watchlists and alerts.
+**StatLine** is a web platform for unified sports statistics and forecasts across **NBA**, **NFL** and **Liga MX**. This repository is the single-page app: standings, games by date, player search and profiles, box scores, player profiles and comparisons, forecasts and projections, and _(planned)_ watchlists and alerts.
 
 Stack: **React 18**, **Vite**, **TypeScript**, **TailwindCSS**, **TanStack Query**, **Recharts**, React Router. Served by unprivileged **nginx** in the `statline/web` image.
 
@@ -49,5 +49,5 @@ In AKS the Ingress sends `/api` to the api Service and everything else to this i
 | `/jugadores/:id`         | Player profile with averages and trend chart   | ✅       |
 | `/partidos/:id`          | Box score with team tables and leaders chart   | ✅       |
 | `/comparar?ids=`         | Comparison of 2 to 4 players (radar and table) | ✅       |
-| `/pronosticos`           | Forecasts and projections                      | 🕓 SL-46 |
+| `/pronosticos`           | Match forecasts, player projections and models | ✅       |
 | `/listas`, `/alertas`    | Watchlists and alerts                          | 🕓 SL-47 |

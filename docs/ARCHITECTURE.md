@@ -25,12 +25,17 @@ Types in `src/api/types.ts` mirror the backend responses documented in statline-
 Hooks for these reads: `usePromedios`, `useTendencia` (needs a metric), `useComparacion` (enabled only with 2 to 4 ids, see `COMPARACION_MIN`/`COMPARACION_MAX`) and `useFormaEquipo`.
 
 Types for endpoints not implemented yet (pronósticos, proyecciones, modelos, listas, alertas, ingestas) are tentative and marked in `types.ts`.
+Types in `src/api/types.ts` mirror the backend responses documented in statline-infra `docs/api.md`. Endpoints used today: `POST /api/auth/login`, `POST /api/auth/refresh`, `GET /api/ligas`, `GET /api/ligas/:id/posiciones`, `GET /api/partidos?fecha=&page=`, `GET /api/partidos/:id/boxscore`, `GET /api/jugadores?q=&deporte=&page=`, `GET /api/jugadores/:id`, `GET /api/pronosticos?deporte=&jornada=&page=`, `GET /api/proyecciones?jornada=&page=`, `GET /api/pronosticos/precision?deporte=`, `GET /api/proyecciones/precision?deporte=`, `GET /api/modelos?deporte=&tipo=`, the generation endpoints (`POST /api/pronosticos/generar`, `POST /api/proyecciones/generar`) and the ADMIN-only `POST /api/modelos/:id/activar` and `POST /api/modelos/reentrenar`.
+
+Types for endpoints not implemented yet (listas, alertas, ingestas) are marked in `types.ts`.
 
 ## 6. Screens
 
 - `/partidos/:id` (`features/partidos/BoxscorePage.tsx`): header with score and status, per-team stat tables and a Recharts top-5 leaders chart. Columns and metric keys per sport come from `features/partidos/metricas.ts`, which follows `statline-backend/schemas/*.schema.json`. The leaders metric is kept in `?metrica=`.
 - `/jugadores/:id` (`features/jugadores/JugadorDetallePage.tsx`): profile, season averages table (`PromediosPanel`) and a Recharts line chart of the last 10 games for one metric (`TendenciaPanel`, metric kept in `?metrica=`). A "Comparar" link opens `/comparar?ids=<id>`. Metric lists per sport are shared with the boxscore (`features/partidos/metricas.ts`).
 - `/comparar?ids=a,b[,c,d]` (`features/comparar/CompararPage.tsx`, lazy): selected players live in `?ids=`; the search uses `useJugadores` and, once a selection exists, only offers that sport. The radar (`CompararRadar.tsx`) plots each metric scaled 0 to 100 against the best value among the selected players (`normalizar.ts`); a table below shows the raw averages. API errors (e.g. players from different sports) are shown as they come. A teams tab is not built yet.
+
+- `/pronosticos` (`features/pronosticos/PronosticosPage.tsx`): tabs in `?tab=partidos|jugadores|modelos`, sport in `?deporte=` (default basquetbol) and optional `?jornada=`. Partidos shows match probabilities as a stacked bar (no draw segment outside futbol), the expected score and the model's precision. Jugadores shows projected metrics (labels from `metricas.ts`) and MAE per target. Modelos (ADMIN only, tab hidden otherwise) lists models, activates one after confirmation and retrains per tipo. ANALISTA and ADMIN see the generation buttons. Prediction error codes (`NO_ACTIVE_MODEL`, `INSUFFICIENT_DATA`, `PREDICCIONES_UNAVAILABLE`) are shown as friendly text. Models whose version ends in `-synthetic` carry a "datos sintéticos" badge.
 
 ## 7. Styling
 
