@@ -1,4 +1,4 @@
-import type { Deporte } from "../api/types";
+import type { Deporte, EstatusPartido } from "../api/types";
 
 const NOMBRE_DEPORTE: Record<Deporte, string> = {
   BASQUETBOL: "NBA",
@@ -26,3 +26,11 @@ export function hoyIso(now = new Date()): string {
   const d = String(now.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
 }
+
+export const ETIQUETA_ESTATUS_PARTIDO: Record<EstatusPartido, string> = {
+  PROGRAMADO: "Programado",
+  EN_JUEGO: "En juego",
+  FINALIZADO: "Final",
+  POSPUESTO: "Pospuesto",
+  CANCELADO: "Cancelado",
+};
