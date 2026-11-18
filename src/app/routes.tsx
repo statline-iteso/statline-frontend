@@ -18,6 +18,11 @@ const PartidosPage = lazy(() =>
 const JugadoresPage = lazy(() =>
   import("../features/jugadores/JugadoresPage").then((m) => ({ default: m.JugadoresPage })),
 );
+const PronosticosPage = lazy(() =>
+  import("../features/pronosticos/PronosticosPage").then((m) => ({
+    default: m.PronosticosPage,
+  })),
+);
 const BoxscorePage = lazy(() =>
   import("../features/partidos/BoxscorePage").then((m) => ({ default: m.BoxscorePage })),
 );
@@ -34,6 +39,10 @@ const ListaDetallePage = lazy(() =>
 );
 const AlertasPage = lazy(() =>
   import("../features/alertas/AlertasPage").then((m) => ({ default: m.AlertasPage })),
+);
+
+const CompararPage = lazy(() =>
+  import("../features/comparar/CompararPage").then((m) => ({ default: m.CompararPage })),
 );
 
 const s = (node: ReactNode) => <Suspense fallback={<Cargando />}>{node}</Suspense>;
@@ -55,10 +64,11 @@ export const routes: RouteObject[] = [
       { path: "partidos/:id", element: s(<BoxscorePage />) },
       { path: "jugadores", element: s(<JugadoresPage />) },
       { path: "jugadores/:id", element: s(<JugadorDetallePage />) },
+      { path: "comparar", element: s(<CompararPage />) },
+      { path: "pronosticos", element: s(<PronosticosPage />) },
       { path: "listas", element: s(<ListasPage />) },
       { path: "listas/:id", element: s(<ListaDetallePage />) },
       { path: "alertas", element: s(<AlertasPage />) },
-      // TODO(SL-45, SL-46): comparar, pronosticos.
       { path: "*", element: <NoEncontrado /> },
     ],
   },

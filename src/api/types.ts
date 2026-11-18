@@ -170,34 +170,52 @@ export interface Comparacion {
 }
 
 // ---------------------------------------------------------------------------
-// Pronósticos y proyecciones (SL-29). Tentative until the predictions service is live.
+// Pronósticos y proyecciones (SL-29, implemented)
 // ---------------------------------------------------------------------------
 
 export const TIPOS_INFERENCIA = ["RESULTADO_PARTIDO", "PROYECCION_JUGADOR"] as const;
 export type TipoInferencia = (typeof TIPOS_INFERENCIA)[number];
 
-export interface ModeloPrediccion {
+/** Model summary embedded in pronósticos and proyecciones. */
+export interface ModeloResumen {
   id: string;
   deporte: Deporte;
   tipo: TipoInferencia;
   version: string;
-  artefactoUri: string;
   nombreMetrica: string; // p. ej. "log_loss", "mae"
   metricaError: number;
   activo: boolean;
+}
+
+/** GET /api/modelos. */
+export interface ModeloPrediccion extends ModeloResumen {
+  artefactoUri: string;
   entrenadoEn: string;
 }
+
+/** Game as embedded in pronósticos and proyecciones (no liga). */
+export type PartidoRef = Omit<Partido, "ligaId">;
 
 export interface PronosticoPartido {
   id: string;
   partidoId: string;
   modeloId: string;
+  /** Probabilities in [0, 1]. probEmpate is 0 for basquetbol and americano. */
   probLocal: number;
   probEmpate: number;
   probVisita: number;
   marcadorEsperadoLocal: number | null;
   marcadorEsperadoVisita: number | null;
   generadoEn: string;
+  partido: PartidoRef;
+  modelo: ModeloResumen;
+}
+
+export interface JugadorRef {
+  id: string;
+  nombre: string;
+  posicion: string | null;
+  equipoId: string | null;
 }
 
 export interface ProyeccionJugador {
@@ -205,16 +223,91 @@ export interface ProyeccionJugador {
   jugadorId: string;
   partidoId: string;
   modeloId: string;
+  /** Flat map; NFL keys are dotted (`pase.yardas`), matching metricas.ts. */
   metricas: Record<string, number>;
   generadoEn: string;
+  jugador: JugadorRef;
+  partido: PartidoRef;
+  modelo: ModeloResumen;
 }
 
-/** GET /api/pronosticos/precision and /api/proyecciones/precision. Shape not in api.md yet. */
-export interface Precision {
-  modeloId?: string;
+/** Model summary inside the precision endpoints. */
+export interface ModeloPrecision {
+  id: string;
+  version: string;
   nombreMetrica: string;
-  valor: number;
-  muestra: number;
+  metricaError: number;
+}
+
+/** GET /api/pronosticos/precision?deporte=. accuracy and logLoss are null without data. */
+export interface PrecisionResultado {
+  deporte: Deporte;
+  tipo: TipoInferencia;
+  modelo: ModeloPrecision;
+  precision: {
+    n: number;
+    aciertos: number;
+    accuracy: number | null;
+    logLoss: number | null;
+  };
+}
+
+/** GET /api/proyecciones/precision?deporte=. */
+export interface PrecisionProyeccion {
+  deporte: Deporte;
+  tipo: TipoInferencia;
+  modelo: ModeloPrecision;
+  precision: {
+    n: number;
+    porObjetivo: Record<string, { n: number; mae: number | null }>;
+  };
+}
+
+export interface GenerarPronosticosBody {
+  deporte: Deporte;
+  jornada?: number;
+  partidoIds?: string[];
+}
+
+export interface GenerarProyeccionesBody {
+  deporte: Deporte;
+  jornada?: number;
+  jugadorIds?: string[];
+}
+
+export interface GenerarPronosticosRespuesta {
+  deporte: Deporte;
+  modeloId: string;
+  generados: number;
+  pronosticos: PronosticoPartido[];
+}
+
+export interface GenerarProyeccionesRespuesta {
+  deporte: Deporte;
+  modeloId: string;
+  generados: number;
+  proyecciones: ProyeccionJugador[];
+}
+
+/** POST /api/modelos/:id/activar (predicciones answers only the id and the flag). */
+export interface ActivarModeloRespuesta {
+  modeloId: string;
+  activo: true;
+}
+
+/** POST /api/modelos/reentrenar. */
+export interface ReentrenarRespuesta {
+  modeloId: string;
+  version: string;
+  deporte: Deporte;
+  tipo: TipoInferencia;
+  nombreMetrica: string;
+  metrica: number;
+  baseline: number;
+  nTrain: number;
+  nTest: number;
+  activado: boolean;
+  motivo: string | null;
 }
 
 // ---------------------------------------------------------------------------
@@ -287,4 +380,18 @@ export interface EjecucionIngesta {
   registrosProcesados: number;
   peticionesUsadas: number;
   error: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Equipos: forma (SL-27, implemented)
+// ---------------------------------------------------------------------------
+
+/**
+ * GET /api/equipos/:id/forma. `forma` is one letter per recent finished game (G, E, P), oldest
+ * first, e.g. "GPGEG". `partidos` lists the game ids in the same order as `forma`.
+ */
+export interface FormaEquipo {
+  equipoId: string;
+  forma: string;
+  partidos: string[];
 }

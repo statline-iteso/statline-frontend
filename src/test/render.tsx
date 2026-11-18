@@ -49,9 +49,14 @@ function App() {
 }
 
 /** Renders the real route tree at `path`, logged in unless `loggedIn` is false. */
-export function renderApp(opts: { path: string; fetchFn: typeof fetch; loggedIn?: boolean }) {
+export function renderApp(opts: {
+  path: string;
+  fetchFn: typeof fetch;
+  loggedIn?: boolean;
+  usuario?: Usuario;
+}) {
   if (opts.loggedIn !== false) {
-    window.localStorage.setItem("statline.usuario", JSON.stringify(USUARIO));
+    window.localStorage.setItem("statline.usuario", JSON.stringify(opts.usuario ?? USUARIO));
   }
   const tokens = memoryTokens(
     opts.loggedIn === false ? null : { accessToken: "a1", refreshToken: "r1" },
