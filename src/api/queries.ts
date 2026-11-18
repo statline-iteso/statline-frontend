@@ -9,9 +9,14 @@ import { useApi } from "../auth/useAuth";
 import type { ApiClient } from "./client";
 import type {
   ActivarModeloRespuesta,
+  ActualizarAlerta,
+  Alerta,
   Boxscore,
   Comparacion,
+  CrearAlerta,
   Deporte,
+  ElementoLista,
+  EquipoRef,
   FormaEquipo,
   GenerarPronosticosBody,
   GenerarPronosticosRespuesta,
@@ -19,6 +24,7 @@ import type {
   GenerarProyeccionesRespuesta,
   Jugador,
   Liga,
+  ListaSeguimiento,
   ModeloPrediccion,
   Paginado,
   Partido,
@@ -51,6 +57,10 @@ export const keys = {
   proyecciones: (f: FiltrosProyecciones) => ["proyecciones", f] as const,
   precisionProyecciones: (deporte: Deporte) => ["proyecciones", "precision", { deporte }] as const,
   modelos: (f: FiltrosModelos) => ["modelos", f] as const,
+  equipos: () => ["equipos"] as const,
+  listas: (f: { page: number }) => ["listas", f] as const,
+  lista: (id: string) => ["listas", id] as const,
+  alertas: (f: { page: number }) => ["alertas", f] as const,
 };
 
 /** Player comparison accepts between 2 and 4 players (the API answers 400 otherwise). */
@@ -165,6 +175,104 @@ export function useFormaEquipo(id: string | undefined) {
     queryFn: () => api.get<FormaEquipo>(`/api/equipos/${id}/forma`),
     enabled: Boolean(id),
   });
+}
+
+export function useEquipos() {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.equipos(),
+    // The backend has no name filter for equipos; a league has far fewer than 100 teams.
+    queryFn: () => api.get<Paginado<EquipoRef>>("/api/equipos", { pageSize: 100 }),
+  });
+}
+
+export function useListas(f: { page: number }) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.listas(f),
+    queryFn: () => api.get<Paginado<ListaSeguimiento>>("/api/listas", { ...f, pageSize: 20 }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/** GET /api/listas/:id, which includes `elementos`. */
+export function useLista(id: string) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.lista(id),
+    queryFn: () => api.get<ListaSeguimiento>(`/api/listas/${id}`),
+  });
+}
+
+export function useAlertas(f: { page: number }) {
+  const api = useApi();
+  return useQuery({
+    queryKey: keys.alertas(f),
+    queryFn: () => api.get<Paginado<Alerta>>("/api/alertas", { ...f, pageSize: 20 }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+/*
+ * Writes. Lists invalidate the whole ["listas"] / ["alertas"] prefix; element changes only
+ * refresh the list they belong to.
+ */
+
+export function useCrearLista() {
+  return useApiMutation(
+    (api, body: { nombre: string }) => api.post<ListaSeguimiento>("/api/listas", body),
+    [["listas"]],
+  );
+}
+
+export function useRenombrarLista() {
+  return useApiMutation(
+    (api, v: { id: string; nombre: string }) =>
+      api.put<ListaSeguimiento>(`/api/listas/${v.id}`, { nombre: v.nombre }),
+    [["listas"]],
+  );
+}
+
+export function useEliminarLista() {
+  return useApiMutation((api, id: string) => api.delete(`/api/listas/${id}`), [["listas"]]);
+}
+
+export function useAgregarElemento() {
+  return useApiMutation(
+    (api, v: { listaId: string; tipo: ElementoLista["tipo"]; refId: string }) =>
+      api.post<ElementoLista>(`/api/listas/${v.listaId}/elementos`, {
+        tipo: v.tipo,
+        refId: v.refId,
+      }),
+    (v) => [keys.lista(v.listaId)],
+  );
+}
+
+export function useQuitarElemento() {
+  return useApiMutation(
+    (api, v: { listaId: string; refId: string }) =>
+      api.delete(`/api/listas/${v.listaId}/elementos/${v.refId}`),
+    (v) => [keys.lista(v.listaId)],
+  );
+}
+
+export function useCrearAlerta() {
+  return useApiMutation(
+    (api, body: CrearAlerta) => api.post<Alerta>("/api/alertas", body),
+    [["alertas"]],
+  );
+}
+
+export function useActualizarAlerta() {
+  return useApiMutation(
+    (api, v: { id: string; body: ActualizarAlerta }) =>
+      api.put<Alerta>(`/api/alertas/${v.id}`, v.body),
+    [["alertas"]],
+  );
+}
+
+export function useEliminarAlerta() {
+  return useApiMutation((api, id: string) => api.delete(`/api/alertas/${id}`), [["alertas"]]);
 }
 
 /**

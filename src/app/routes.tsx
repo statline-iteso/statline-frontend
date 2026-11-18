@@ -31,6 +31,15 @@ const JugadorDetallePage = lazy(() =>
     default: m.JugadorDetallePage,
   })),
 );
+const ListasPage = lazy(() =>
+  import("../features/listas/ListasPage").then((m) => ({ default: m.ListasPage })),
+);
+const ListaDetallePage = lazy(() =>
+  import("../features/listas/ListaDetallePage").then((m) => ({ default: m.ListaDetallePage })),
+);
+const AlertasPage = lazy(() =>
+  import("../features/alertas/AlertasPage").then((m) => ({ default: m.AlertasPage })),
+);
 
 const CompararPage = lazy(() =>
   import("../features/comparar/CompararPage").then((m) => ({ default: m.CompararPage })),
@@ -57,7 +66,9 @@ export const routes: RouteObject[] = [
       { path: "jugadores/:id", element: s(<JugadorDetallePage />) },
       { path: "comparar", element: s(<CompararPage />) },
       { path: "pronosticos", element: s(<PronosticosPage />) },
-      // TODO(SL-47): listas, alertas.
+      { path: "listas", element: s(<ListasPage />) },
+      { path: "listas/:id", element: s(<ListaDetallePage />) },
+      { path: "alertas", element: s(<AlertasPage />) },
       { path: "*", element: <NoEncontrado /> },
     ],
   },

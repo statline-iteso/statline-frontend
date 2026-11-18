@@ -28,6 +28,11 @@ Types for endpoints not implemented yet (pronósticos, proyecciones, modelos, li
 Types in `src/api/types.ts` mirror the backend responses documented in statline-infra `docs/api.md`. Endpoints used today: `POST /api/auth/login`, `POST /api/auth/refresh`, `GET /api/ligas`, `GET /api/ligas/:id/posiciones`, `GET /api/partidos?fecha=&page=`, `GET /api/partidos/:id/boxscore`, `GET /api/jugadores?q=&deporte=&page=`, `GET /api/jugadores/:id`, `GET /api/pronosticos?deporte=&jornada=&page=`, `GET /api/proyecciones?jornada=&page=`, `GET /api/pronosticos/precision?deporte=`, `GET /api/proyecciones/precision?deporte=`, `GET /api/modelos?deporte=&tipo=`, the generation endpoints (`POST /api/pronosticos/generar`, `POST /api/proyecciones/generar`) and the ADMIN-only `POST /api/modelos/:id/activar` and `POST /api/modelos/reentrenar`.
 
 Types for endpoints not implemented yet (listas, alertas, ingestas) are marked in `types.ts`.
+Types in `src/api/types.ts` mirror the backend responses documented in statline-infra `docs/api.md`. Endpoints used today: `POST /api/auth/login`, `POST /api/auth/refresh`, `GET /api/ligas`, `GET /api/ligas/:id/posiciones`, `GET /api/partidos?fecha=&page=`, `GET /api/partidos/:id/boxscore`, `GET /api/jugadores?q=&deporte=&page=`, `GET /api/jugadores/:id`, `GET /api/equipos`, and the owner-scoped watchlists and alerts (SL-47): `GET|POST /api/listas`, `GET|PUT|DELETE /api/listas/:id`, `POST /api/listas/:id/elementos`, `DELETE /api/listas/:id/elementos/:refId`, `GET|POST /api/alertas`, `PUT|DELETE /api/alertas/:id`.
+
+Types for endpoints not implemented yet (promedios, tendencia, comparar, pronósticos, proyecciones, modelos, ingestas) are tentative and marked in `types.ts`.
+
+Writes for lists and alerts: `ListaSeguimiento` mutations invalidate the `["listas"]` prefix (element changes only the one list); alert mutations invalidate `["alertas"]`. A 409 on adding an element means it is already in the list. 400 `VALIDATION_ERROR` details are kept on `ApiError.details` and mapped to form fields by `lib/errores.ts`.
 
 ## 6. Screens
 
@@ -36,6 +41,10 @@ Types for endpoints not implemented yet (listas, alertas, ingestas) are marked i
 - `/comparar?ids=a,b[,c,d]` (`features/comparar/CompararPage.tsx`, lazy): selected players live in `?ids=`; the search uses `useJugadores` and, once a selection exists, only offers that sport. The radar (`CompararRadar.tsx`) plots each metric scaled 0 to 100 against the best value among the selected players (`normalizar.ts`); a table below shows the raw averages. API errors (e.g. players from different sports) are shown as they come. A teams tab is not built yet.
 
 - `/pronosticos` (`features/pronosticos/PronosticosPage.tsx`): tabs in `?tab=partidos|jugadores|modelos`, sport in `?deporte=` (default basquetbol) and optional `?jornada=`. Partidos shows match probabilities as a stacked bar (no draw segment outside futbol), the expected score and the model's precision. Jugadores shows projected metrics (labels from `metricas.ts`) and MAE per target. Modelos (ADMIN only, tab hidden otherwise) lists models, activates one after confirmation and retrains per tipo. ANALISTA and ADMIN see the generation buttons. Prediction error codes (`NO_ACTIVE_MODEL`, `INSUFFICIENT_DATA`, `PREDICCIONES_UNAVAILABLE`) are shown as friendly text. Models whose version ends in `-synthetic` carry a "datos sintéticos" badge.
+
+- `/listas` (`features/listas/ListasPage.tsx`): owner's watchlists with pagination (`?page=`) and a create form that opens the new list.
+- `/listas/:id` (`features/listas/ListaDetallePage.tsx`): rename, delete (confirmed), elements with remove (confirmed), add a jugador through the search picker (`components/SelectorJugador.tsx`) or add a team from the team list.
+- `/alertas` (`features/alertas/AlertasPage.tsx`): alerts with an activa switch (PUT `{activa}`), delete (confirmed) and a create form (`FormularioAlerta.tsx`) whose fields follow `tipo`. Rules live in `features/alertas/validacion.ts` and mirror the backend: LESION needs a jugador, INICIO_PARTIDO a jugador or equipo, UMBRAL a jugador, a metric of its sport (from `partidos/metricas.ts`), an operator and a number.
 
 ## 7. Styling
 
