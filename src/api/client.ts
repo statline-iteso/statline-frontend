@@ -5,6 +5,8 @@ export class ApiError extends Error {
     public readonly status: number,
     public readonly code: string,
     message: string,
+    /** Field-level details of a 400 VALIDATION_ERROR, as sent by the backend. */
+    public readonly details?: unknown,
   ) {
     super(message);
   }
@@ -25,6 +27,10 @@ export type Query = Record<string, string | number | undefined>;
 export interface ApiClient {
   get<T>(path: string, query?: Query): Promise<T>;
   post<T>(path: string, body?: unknown): Promise<T>;
+  put<T>(path: string, body?: unknown): Promise<T>;
+  patch<T>(path: string, body?: unknown): Promise<T>;
+  /** Resolves with `undefined` on 204 No Content. */
+  delete<T = void>(path: string): Promise<T>;
 }
 
 /**
@@ -97,6 +103,7 @@ export function createApiClient(opts: {
         res.status,
         err?.error.code ?? "HTTP_ERROR",
         err?.error.message ?? `HTTP ${res.status}`,
+        err?.error.details,
       );
     }
     if (res.status === 204) return undefined as T;
@@ -106,6 +113,9 @@ export function createApiClient(opts: {
   return {
     get: (path, query) => request("GET", path, undefined, query),
     post: (path, body) => request("POST", path, body),
+    put: (path, body) => request("PUT", path, body),
+    patch: (path, body) => request("PATCH", path, body),
+    delete: <T = void>(path: string) => request<T>("DELETE", path),
   };
 }
 

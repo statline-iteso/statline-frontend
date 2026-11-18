@@ -9,6 +9,8 @@ on:
   push:
     branches: [develop, main]
     tags: ["v*.*.*"]
+  # auto-merge.yml starts CD on develop after each merge (merges made with GITHUB_TOKEN fire no push).
+  workflow_dispatch:
 
 concurrency:
   group: cd-${{ github.ref }}
@@ -18,8 +20,27 @@ permissions:
   contents: read
 
 jobs:
+  gate:
+    name: secrets present?
+    runs-on: ubuntu-latest
+    outputs:
+      dockerhub: ${{ steps.check.outputs.dockerhub }}
+      dispatch: ${{ steps.check.outputs.dispatch }}
+    steps:
+      - id: check
+        env:
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          INFRA_DISPATCH_TOKEN: ${{ secrets.INFRA_DISPATCH_TOKEN }}
+        run: |
+          echo "dockerhub=$([ -n "$DOCKERHUB_TOKEN" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "dispatch=$([ -n "$INFRA_DISPATCH_TOKEN" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          [ -n "$DOCKERHUB_TOKEN" ] || echo "::notice::DOCKERHUB_USERNAME / DOCKERHUB_TOKEN not set; nothing is built or pushed."
+          [ -n "$INFRA_DISPATCH_TOKEN" ] || echo "::notice::INFRA_DISPATCH_TOKEN not set; statline-infra is not notified."
+
   image:
     name: image · web
+    needs: gate
+    if: needs.gate.outputs.dockerhub == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -80,7 +101,8 @@ jobs:
 
   dispatch:
     name: tell statline-infra which tag to deploy
-    needs: image
+    needs: [gate, image]
+    if: needs.gate.outputs.dispatch == 'true'
     runs-on: ubuntu-latest
     permissions: {}
     steps:
