@@ -2,11 +2,12 @@
 
 This repo's slice of the project backlog. The full backlog (61 issues, 277 points) and the board live in [statline-infra docs/BACKLOG.md](https://github.com/statline-iteso/statline-infra/blob/develop/docs/BACKLOG.md).
 
-**Progress:** 6 of 10 issues done · 22 of 39 points.
+**Progress:** 10 of 10 issues done · 39 of 39 points.
 
 **How to read it**
 
-- ✅ done in the first half · ⏳ pending (second half, Ian Rodríguez).
+- ✅ done (first half: Juan Pablo González; second half: Ian Rodríguez) · ⏳ pending.
+- An unticked criterion on a ✅ issue was met in a different way; its note says how and links the decision.
 - One issue = one PR (`feature/<issue>-<desc>` → `develop`, squash merge, `Closes #N`).
 - Board columns: Backlog → Listo para trabajar → En progreso → En revisión → Terminado.
 
@@ -49,38 +50,38 @@ This repo's slice of the project backlog. The full backlog (61 issues, 277 point
 - [x] Tabla de posiciones por liga
 - [x] Partidos por fecha con marcador y estatus
 
-### ⏳ [SL-44](https://github.com/statline-iteso/statline-frontend/issues/5) · Construir componentes visuales de boxscore con TailwindCSS y Recharts
+### ✅ [SL-44](https://github.com/statline-iteso/statline-frontend/issues/5) · Construir componentes visuales de boxscore con TailwindCSS y Recharts
 
 **Sprint:** S4 · **Points:** 5 · **Priority:** Media
 
 **Acceptance criteria**
 
-- [ ] Tabla de boxscore por equipo con columnas según el deporte
-- [ ] Gráfica de barras de líderes del partido (Recharts)
+- [x] Tabla de boxscore por equipo con columnas según el deporte
+- [x] Gráfica de barras de líderes del partido (Recharts)
 
-### ⏳ [SL-45](https://github.com/statline-iteso/statline-frontend/issues/6) · Comparación de jugadores y equipos
+### ✅ [SL-45](https://github.com/statline-iteso/statline-frontend/issues/6) · Comparación de jugadores y equipos
 
 **Sprint:** S4 · **Points:** 4 · **Priority:** Media
 
 **Acceptance criteria**
 
-- [ ] Selector de 2 a 4 jugadores y gráfica de radar con promedios
+- [x] Selector de 2 a 4 jugadores y gráfica de radar con promedios
 
-### ⏳ [SL-46](https://github.com/statline-iteso/statline-frontend/issues/7) · Vistas de pronósticos y proyecciones
-
-**Sprint:** S5 · **Points:** 4 · **Priority:** Media
-
-**Acceptance criteria**
-
-- [ ] Probabilidades por partido de la jornada y proyecciones por jugador
-
-### ⏳ [SL-47](https://github.com/statline-iteso/statline-frontend/issues/8) · Listas de seguimiento y alertas
+### ✅ [SL-46](https://github.com/statline-iteso/statline-frontend/issues/7) · Vistas de pronósticos y proyecciones
 
 **Sprint:** S5 · **Points:** 4 · **Priority:** Media
 
 **Acceptance criteria**
 
-- [ ] CRUD de listas y elementos; configuración de alertas por lesión, umbral o inicio
+- [x] Probabilidades por partido de la jornada y proyecciones por jugador
+
+### ✅ [SL-47](https://github.com/statline-iteso/statline-frontend/issues/8) · Listas de seguimiento y alertas
+
+**Sprint:** S5 · **Points:** 4 · **Priority:** Media
+
+**Acceptance criteria**
+
+- [x] CRUD de listas y elementos; configuración de alertas por lesión, umbral o inicio
 
 ### ✅ [SL-48](https://github.com/statline-iteso/statline-frontend/issues/9) · Dockerfile con nginx y pruebas con Vitest (cobertura ≥ 70 %)
 
