@@ -19,6 +19,12 @@ concurrency:
 permissions:
   contents: read
 
+# Docker Hub namespace of the images: repository variable DOCKERHUB_NAMESPACE (the account that
+# owns the repos), "statline" when unset. A variable, not a secret: secret values are masked in
+# logs and job outputs, which would break the image names.
+env:
+  IMAGE_NAMESPACE: ${{ vars.DOCKERHUB_NAMESPACE || 'statline' }}
+
 jobs:
   gate:
     name: secrets present?
@@ -56,7 +62,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: statline/web
+          images: ${{ env.IMAGE_NAMESPACE }}/web
           tags: |
             type=sha,format=short,prefix=
             type=ref,event=tag
@@ -82,7 +88,7 @@ jobs:
       - name: Trivy on the local image (fail on HIGH/CRITICAL, before any push)
         uses: aquasecurity/trivy-action@v0.36.0
         with:
-          image-ref: statline/web:${{ steps.sha.outputs.short }}
+          image-ref: ${{ env.IMAGE_NAMESPACE }}/web:${{ steps.sha.outputs.short }}
           version: v0.76.1
           severity: HIGH,CRITICAL
           ignore-unfixed: true
