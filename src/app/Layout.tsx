@@ -5,7 +5,10 @@ const ENLACES = [
   { to: "/ligas", texto: "Ligas" },
   { to: "/partidos", texto: "Partidos" },
   { to: "/jugadores", texto: "Jugadores" },
-  // TODO(SL-45, SL-46, SL-47): Comparar, Pronósticos, Listas y Alertas.
+  { to: "/comparar", texto: "Comparar" },
+  { to: "/pronosticos", texto: "Pronósticos" },
+  { to: "/listas", texto: "Listas" },
+  { to: "/alertas", texto: "Alertas" },
 ];
 
 export function Layout() {

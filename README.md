@@ -1,6 +1,6 @@
 # StatLine — Frontend
 
-**StatLine** is a web platform for unified sports statistics and forecasts across **NBA**, **NFL** and **Liga MX**. This repository is the single-page app: standings, games by date, player search and profiles, and _(planned)_ box scores, comparisons, forecasts, watchlists and alerts.
+**StatLine** is a web platform for unified sports statistics and forecasts across **NBA**, **NFL** and **Liga MX**. This repository is the single-page app: standings, games by date, player search and profiles, box scores, player comparisons, forecasts and projections, watchlists and alerts.
 
 Stack: **React 18**, **Vite**, **TypeScript**, **TailwindCSS**, **TanStack Query**, **Recharts**, React Router. Served by unprivileged **nginx** in the `statline/web` image.
 
@@ -40,14 +40,20 @@ In AKS the Ingress sends `/api` to the api Service and everything else to this i
 
 ## Screens
 
-| Route                    | Screen                                         | Status                               |
-| ------------------------ | ---------------------------------------------- | ------------------------------------ |
-| `/login`                 | Sign in                                        | ✅                                   |
-| `/ligas`                 | League tabs and standings table                | ✅                                   |
-| `/partidos?fecha=`       | Games of a day with score and status           | ✅                                   |
-| `/jugadores?q=&deporte=` | Player search with sport filter and pagination | ✅                                   |
-| `/jugadores/:id`         | Player profile                                 | ✅ (averages and trend: SL-27/SL-45) |
-| `/partidos/:id`          | Box score with charts                          | 🕓 SL-44                             |
-| `/comparar`              | Player/team comparison                         | 🕓 SL-45                             |
-| `/pronosticos`           | Forecasts and projections                      | 🕓 SL-46                             |
-| `/listas`, `/alertas`    | Watchlists and alerts                          | 🕓 SL-47                             |
+| Route                    | Screen                                                   | Status |
+| ------------------------ | -------------------------------------------------------- | ------ |
+| `/login`                 | Sign in                                                  | ✅     |
+| `/ligas`                 | League tabs and standings table                          | ✅     |
+| `/partidos?fecha=`       | Games of a day with score and status                     | ✅     |
+| `/jugadores?q=&deporte=` | Player search with sport filter and pagination           | ✅     |
+| `/jugadores/:id`         | Player profile with averages and trend chart             | ✅     |
+| `/partidos/:id`          | Box score with team tables and leaders chart             | ✅     |
+| `/comparar?ids=`         | Comparison of 2 to 4 players (radar and table)           | ✅     |
+| `/pronosticos`           | Match forecasts, player projections and models           | ✅     |
+| `/listas`, `/listas/:id` | Watchlists: create, rename, add/remove players and teams | ✅     |
+| `/alertas`               | Alerts: create by type, toggle, delete                   | ✅     |
+
+## CI/CD
+
+- `ci.yml` runs on every push and PR. `cd.yml` runs on pushes to `develop` and `main` and on `vX.Y.Z` tags: it pushes `statline/web` to Docker Hub (7-char SHA, plus `vX.Y.Z` on tags), scans it with Trivy and asks statline-infra to deploy the new tag (`develop` → staging, `main` and tags → prod).
+- Required repository secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`, `INFRA_DISPATCH_TOKEN` (fine-grained PAT with `contents: write` on `statline-iteso/statline-infra`).

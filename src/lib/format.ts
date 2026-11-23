@@ -1,4 +1,4 @@
-import type { Deporte } from "../api/types";
+import type { Deporte, EstatusPartido } from "../api/types";
 
 const NOMBRE_DEPORTE: Record<Deporte, string> = {
   BASQUETBOL: "NBA",
@@ -25,4 +25,23 @@ export function hoyIso(now = new Date()): string {
   const m = String(now.getMonth() + 1).padStart(2, "0");
   const d = String(now.getDate()).padStart(2, "0");
   return `${y}-${m}-${d}`;
+}
+
+export const ETIQUETA_ESTATUS_PARTIDO: Record<EstatusPartido, string> = {
+  PROGRAMADO: "Programado",
+  EN_JUEGO: "En juego",
+  FINALIZADO: "Final",
+  POSPUESTO: "Pospuesto",
+  CANCELADO: "Cancelado",
+};
+
+const FORMATO_CORTO = new Intl.DateTimeFormat("es-MX", { day: "numeric", month: "short" });
+
+/** "14 nov" for chart axes. */
+export const fechaCorta = (iso: string) => FORMATO_CORTO.format(new Date(iso));
+
+/** Averages: integers as-is, decimals with one digit; "–" when the metric was never reported. */
+export function formatearPromedio(valor: number | null | undefined): string {
+  if (valor === null || valor === undefined) return "–";
+  return Number.isInteger(valor) ? String(valor) : valor.toFixed(1);
 }

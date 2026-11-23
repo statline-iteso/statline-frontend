@@ -18,10 +18,31 @@ const PartidosPage = lazy(() =>
 const JugadoresPage = lazy(() =>
   import("../features/jugadores/JugadoresPage").then((m) => ({ default: m.JugadoresPage })),
 );
+const PronosticosPage = lazy(() =>
+  import("../features/pronosticos/PronosticosPage").then((m) => ({
+    default: m.PronosticosPage,
+  })),
+);
+const BoxscorePage = lazy(() =>
+  import("../features/partidos/BoxscorePage").then((m) => ({ default: m.BoxscorePage })),
+);
 const JugadorDetallePage = lazy(() =>
   import("../features/jugadores/JugadorDetallePage").then((m) => ({
     default: m.JugadorDetallePage,
   })),
+);
+const ListasPage = lazy(() =>
+  import("../features/listas/ListasPage").then((m) => ({ default: m.ListasPage })),
+);
+const ListaDetallePage = lazy(() =>
+  import("../features/listas/ListaDetallePage").then((m) => ({ default: m.ListaDetallePage })),
+);
+const AlertasPage = lazy(() =>
+  import("../features/alertas/AlertasPage").then((m) => ({ default: m.AlertasPage })),
+);
+
+const CompararPage = lazy(() =>
+  import("../features/comparar/CompararPage").then((m) => ({ default: m.CompararPage })),
 );
 
 const s = (node: ReactNode) => <Suspense fallback={<Cargando />}>{node}</Suspense>;
@@ -40,9 +61,14 @@ export const routes: RouteObject[] = [
       { index: true, element: <Navigate to="/ligas" replace /> },
       { path: "ligas", element: s(<LigasPage />) },
       { path: "partidos", element: s(<PartidosPage />) },
+      { path: "partidos/:id", element: s(<BoxscorePage />) },
       { path: "jugadores", element: s(<JugadoresPage />) },
       { path: "jugadores/:id", element: s(<JugadorDetallePage />) },
-      // TODO(SL-44..SL-47): partidos/:id (boxscore), comparar, pronosticos, listas, alertas.
+      { path: "comparar", element: s(<CompararPage />) },
+      { path: "pronosticos", element: s(<PronosticosPage />) },
+      { path: "listas", element: s(<ListasPage />) },
+      { path: "listas/:id", element: s(<ListaDetallePage />) },
+      { path: "alertas", element: s(<AlertasPage />) },
       { path: "*", element: <NoEncontrado /> },
     ],
   },

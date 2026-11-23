@@ -2,6 +2,8 @@ import { Link, useParams } from "react-router-dom";
 import { useJugador } from "../../api/queries";
 import type { Jugador } from "../../api/types";
 import { Cargando, DeporteTag, ErrorMensaje } from "../../components/ui";
+import { PromediosPanel } from "./PromediosPanel";
+import { TendenciaPanel } from "./TendenciaPanel";
 
 const ESTATUS: Record<Jugador["estatus"], { texto: string; clase: string }> = {
   DISPONIBLE: { texto: "Disponible", clase: "text-green-700 dark:text-green-400" },
@@ -25,9 +27,14 @@ export function JugadorDetallePage() {
         ← Jugadores
       </Link>
       <div className="card space-y-2">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold">{j.nombre}</h1>
-          <DeporteTag deporte={j.deporte} />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold">{j.nombre}</h1>
+            <DeporteTag deporte={j.deporte} />
+          </div>
+          <Link to={`/comparar?ids=${encodeURIComponent(j.id)}`} className="btn">
+            Comparar
+          </Link>
         </div>
         <dl className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
           <Dato titulo="Equipo" valor={j.equipo?.nombre ?? "Agente libre"} />
@@ -39,7 +46,10 @@ export function JugadorDetallePage() {
           </div>
         </dl>
       </div>
-      {/* TODO(SL-27, SL-45): promedios, tendencia (Recharts) y botón "Comparar". */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        <PromediosPanel jugador={j} />
+        <TendenciaPanel jugador={j} />
+      </div>
     </div>
   );
 }

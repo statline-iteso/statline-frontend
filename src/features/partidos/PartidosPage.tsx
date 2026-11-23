@@ -1,16 +1,8 @@
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { usePartidos } from "../../api/queries";
 import type { Partido } from "../../api/types";
 import { Cargando, ErrorMensaje, Paginacion, Vacio } from "../../components/ui";
-import { fechaHora, hoyIso } from "../../lib/format";
-
-const ETIQUETA_ESTATUS: Record<Partido["estatus"], string> = {
-  PROGRAMADO: "Programado",
-  EN_JUEGO: "En juego",
-  FINALIZADO: "Final",
-  POSPUESTO: "Pospuesto",
-  CANCELADO: "Cancelado",
-};
+import { ETIQUETA_ESTATUS_PARTIDO, fechaHora, hoyIso } from "../../lib/format";
 
 export function PartidosPage() {
   const [params, setParams] = useSearchParams();
@@ -47,10 +39,16 @@ export function PartidosPage() {
                   <span>{fechaHora(p.fecha)}</span>
                   <span>
                     {p.jornada ? `Jornada ${p.jornada} · ` : ""}
-                    {ETIQUETA_ESTATUS[p.estatus]}
+                    {ETIQUETA_ESTATUS_PARTIDO[p.estatus]}
                   </span>
                 </div>
                 <Marcador partido={p} />
+                <Link
+                  to={`/partidos/${p.id}`}
+                  className="mt-3 inline-block text-sm text-sky-700 underline dark:text-sky-400"
+                >
+                  Ver boxscore
+                </Link>
               </li>
             ))}
           </ul>
@@ -81,7 +79,6 @@ function Marcador({ partido: p }: { partido: Partido }) {
           <span className="tabular-nums">{conMarcador ? pts : "–"}</span>
         </div>
       ))}
-      {/* TODO(SL-44): link to the box score view (GET /api/partidos/:id/boxscore). */}
     </div>
   );
 }

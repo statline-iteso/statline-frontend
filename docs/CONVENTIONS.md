@@ -8,4 +8,5 @@
 - **Accessibility:** inputs have labels, interactive elements are buttons or links, tables have headers, status messages use `role="status"`/`role="alert"`.
 - **Styling:** Tailwind utilities; Prettier sorts classes (`prettier-plugin-tailwindcss`).
 - **Tests:** Vitest + Testing Library through `renderApp()` (real routes, fake `fetch`); assert what the user sees. Coverage ≥ 70 %.
+- **Charts:** Recharts renders in jsdom through a global `ResponsiveContainer` mock in `src/test/setup.ts` (fixed 600×300). Give the chart wrapper a `role="img"` and an `aria-label` so tests can find it.
 - **Git:** `feature/<issue>-<desc>` from `develop`, Conventional Commits, squash merge, `Closes #N`. **No AI attribution** in commits, PRs or issues.
