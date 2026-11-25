@@ -1,0 +1,8 @@
+# hadolint (CI job "dockerfiles"). Warnings fail the build; these rules are off on purpose:
+# - DL3018: Alpine removes old package versions from its index, so `apk add pkg=x.y` breaks
+#   rebuilds within weeks. Base images are pinned instead, and Trivy gates the result.
+# - DL3059: separate RUN lines are kept where they cache better.
+failure-threshold: warning
+ignored:
+  - DL3018
+  - DL3059
