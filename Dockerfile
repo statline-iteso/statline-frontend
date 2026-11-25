@@ -16,7 +16,7 @@ ARG SENTRY_PROJECT=""
 ENV VITE_SENTRY_RELEASE=${SENTRY_RELEASE} SENTRY_ORG=${SENTRY_ORG} SENTRY_PROJECT=${SENTRY_PROJECT}
 RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN pnpm build
 
-FROM nginxinc/nginx-unprivileged:1.29-alpine AS runtime
+FROM nginxinc/nginx-unprivileged:1.31-alpine AS runtime
 # Patched OS packages; the base image runs as user 101, so switch to root only for the upgrade.
 USER root
 RUN apk upgrade --no-cache
