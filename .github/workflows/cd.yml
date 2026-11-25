@@ -3,6 +3,8 @@ name: CD
 # Proposal §4.3, step 2 for the web image: on develop, main and vX.Y.Z tags, build statline/web,
 # scan it with Trivy (fail on HIGH/CRITICAL), push it to Docker Hub only if clean and ask statline-infra
 # to bump web.image.tag of the matching environment. develop → staging; main and tags → prod.
+# main and tags promote the image develop already built and staging ran (D-44); only a commit
+# with no such image is built. Pushed images carry SBOM and provenance attestations.
 # Nothing deploys from here: Argo CD syncs statline-infra.
 
 on:
@@ -49,26 +51,81 @@ jobs:
     if: needs.gate.outputs.dockerhub == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 2 # this commit and its parents: a release merge promotes its second parent
+          persist-credentials: false
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Image tags (7-char SHA; vX.Y.Z on release tags)
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@c299e40c65443455700f0fdfc63efafe5b349051 # v5.10.0
         with:
           images: ${{ env.IMAGE_NAMESPACE }}/web
           tags: |
             type=sha,format=short,prefix=
             type=ref,event=tag
 
+      # Build once, promote: a release merge into main (and its vX.Y.Z tag) reuses the image that
+      # develop built, scanned and ran in staging, instead of rebuilding the same code (D-44).
+      # Candidates: the tagged commit itself (promoted or built on its main push), then the merge's
+      # second parent (the release branch head, built on develop). Otherwise this run builds.
+      - name: Image to promote (main and tags only)
+        id: promote
+        env:
+          REF: ${{ github.ref }}
+          IMAGE: ${{ env.IMAGE_NAMESPACE }}/web
+        run: |
+          set -euo pipefail
+          source=""
+          if [[ "$REF" == refs/heads/main || "$REF" == refs/tags/* ]]; then
+            candidates=()
+            if [[ "$REF" == refs/tags/* ]]; then
+              head=$(git rev-parse HEAD); candidates+=("${head::7}")
+            fi
+            if parent=$(git rev-parse -q --verify 'HEAD^2'); then candidates+=("${parent::7}"); fi
+            for c in "${candidates[@]}"; do
+              if docker buildx imagetools inspect "$IMAGE:$c" >/dev/null 2>&1; then source="$c"; break; fi
+            done
+          fi
+          echo "source=$source" >> "$GITHUB_OUTPUT"
+          if [[ -n "$source" ]]; then
+            echo "::notice::Promoting $IMAGE:$source (built, scanned and deployed to staging) instead of rebuilding."
+          else
+            echo "Nothing to promote; building this commit."
+          fi
+
+      - name: Trivy on the promoted image (today's vulnerability data, fail on HIGH/CRITICAL)
+        if: steps.promote.outputs.source != ''
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.IMAGE_NAMESPACE }}/web:${{ steps.promote.outputs.source }}
+          version: v0.76.1
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
+          format: table
+
+      - name: Promote (adds this ref's tags to the same image index; attestations included)
+        if: steps.promote.outputs.source != ''
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+          SOURCE: ${{ env.IMAGE_NAMESPACE }}/web:${{ steps.promote.outputs.source }}
+        run: |
+          set -euo pipefail
+          args=()
+          while read -r t; do [[ -n "$t" ]] && args+=(-t "$t"); done <<< "$TAGS"
+          docker buildx imagetools create "${args[@]}" "$SOURCE"
+
       - name: Build (linux/amd64, multi-stage, loaded locally; nothing is pushed yet)
-        uses: docker/build-push-action@v6
+        if: steps.promote.outputs.source == ''
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           platforms: linux/amd64
@@ -76,17 +133,25 @@ jobs:
           push: false
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            SENTRY_RELEASE=${{ github.sha }}
+            SENTRY_ORG=${{ vars.SENTRY_ORG }}
+            SENTRY_PROJECT=${{ vars.SENTRY_PROJECT || 'statline-web' }}
+          secrets: |
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Short SHA for the Trivy image reference
+        if: steps.promote.outputs.source == ''
         id: sha
         env:
           SHA: ${{ github.sha }}
         run: echo "short=${SHA::7}" >> "$GITHUB_OUTPUT"
 
       - name: Trivy on the local image (fail on HIGH/CRITICAL, before any push)
-        uses: aquasecurity/trivy-action@v0.36.0
+        if: steps.promote.outputs.source == ''
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
         with:
           image-ref: ${{ env.IMAGE_NAMESPACE }}/web:${{ steps.sha.outputs.short }}
           version: v0.76.1
@@ -96,14 +161,23 @@ jobs:
           format: table
 
       - name: Push (only reached when the scan passed; layers come from the build cache)
-        uses: docker/build-push-action@v6
+        if: steps.promote.outputs.source == ''
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           platforms: linux/amd64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            SENTRY_RELEASE=${{ github.sha }}
+            SENTRY_ORG=${{ vars.SENTRY_ORG }}
+            SENTRY_PROJECT=${{ vars.SENTRY_PROJECT || 'statline-web' }}
+          secrets: |
+            sentry_auth_token=${{ secrets.SENTRY_AUTH_TOKEN }}
           cache-from: type=gha
+          provenance: mode=max
+          sbom: true
 
   dispatch:
     name: tell statline-infra which tag to deploy
