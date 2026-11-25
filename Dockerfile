@@ -8,7 +8,13 @@ WORKDIR /app
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 RUN pnpm install --frozen-lockfile
 COPY . .
-RUN pnpm build
+# Sentry (statline-infra D-43): the release is the commit (cd.yml build arg; empty in CI). The
+# auth token is a build secret, never a layer: with it, the build uploads hidden source maps.
+ARG SENTRY_RELEASE=""
+ARG SENTRY_ORG=""
+ARG SENTRY_PROJECT=""
+ENV VITE_SENTRY_RELEASE=${SENTRY_RELEASE} SENTRY_ORG=${SENTRY_ORG} SENTRY_PROJECT=${SENTRY_PROJECT}
+RUN --mount=type=secret,id=sentry_auth_token,env=SENTRY_AUTH_TOKEN pnpm build
 
 FROM nginxinc/nginx-unprivileged:1.29-alpine AS runtime
 # Patched OS packages; the base image runs as user 101, so switch to root only for the upgrade.
