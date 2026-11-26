@@ -59,6 +59,7 @@ Writes for lists and alerts: `ListaSeguimiento` mutations invalidate the `["list
 - `/listas` (`features/listas/ListasPage.tsx`): owner's watchlists with pagination (`?page=`) and a create form that opens the new list.
 - `/listas/:id` (`features/listas/ListaDetallePage.tsx`): rename, delete (confirmed), elements with remove (confirmed), add a jugador through the search picker (`components/SelectorJugador.tsx`) or add a team from the team list.
 - `/alertas` (`features/alertas/AlertasPage.tsx`): alerts with an activa switch (PUT `{activa}`), delete (confirmed) and a create form (`FormularioAlerta.tsx`) whose fields follow `tipo`. Rules live in `features/alertas/validacion.ts` and mirror the backend: LESION needs a jugador, INICIO_PARTIDO a jugador or equipo, UMBRAL a jugador, a metric of its sport (from `partidos/metricas.ts`), an operator and a number.
+- `/usuarios` (`features/usuarios/UsuariosPage.tsx`, ADMIN only; the nav link shows only to ADMIN and other roles get a notice without calling the api): users with pagination (`?page=`), a role select per user (`PUT /api/usuarios/:id {rol}`) and delete (confirmed; it removes their lists and alerts). The admin's own row can be neither demoted nor deleted, so it cannot lock itself out. In Cognito mode a deleted user's sign-in account remains and comes back as USUARIO (backend D-41).
 
 ## 7. Styling
 
