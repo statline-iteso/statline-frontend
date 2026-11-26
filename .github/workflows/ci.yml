@@ -37,7 +37,12 @@ jobs:
       - run: pnpm format:check
       - run: pnpm typecheck
       - name: Unit tests (Vitest, coverage ≥ 70 %)
-        run: pnpm test:coverage
+        run: >-
+          pnpm test:coverage --reporter=default --reporter=json --outputFile.json=vitest-results.json
+          --coverage.reporter=text --coverage.reporter=json-summary
+      - name: Test summary
+        if: ${{ !cancelled() }}
+        run: node .github/scripts/resumen-pruebas.mjs "web · Vitest" vitest-results.json coverage/coverage-summary.json
       - run: pnpm build
 
   image:
