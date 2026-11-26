@@ -1,13 +1,14 @@
 import { useState, type FormEvent } from "react";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/useAuth";
 import { ErrorMensaje } from "../../components/ui";
 
 export function LoginPage() {
-  const { usuario, login } = useAuth();
+  const { usuario, login, cognito } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const destino = (location.state as { from?: string } | null)?.from ?? "/ligas";
+  const estado = location.state as { from?: string; aviso?: string } | null;
+  const destino = estado?.from ?? "/ligas";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<unknown>(null);
@@ -33,6 +34,7 @@ export function LoginPage() {
     <div className="flex min-h-screen items-center justify-center px-4">
       <form onSubmit={onSubmit} className="card w-full max-w-sm space-y-4">
         <h1 className="text-xl font-bold">Iniciar sesión</h1>
+        {estado?.aviso && <p className="text-sm text-green-700">{estado.aviso}</p>}
         <label className="block text-sm">
           Correo
           <input
@@ -59,6 +61,12 @@ export function LoginPage() {
         <button className="btn w-full" type="submit" disabled={enviando}>
           {enviando ? "Entrando…" : "Entrar"}
         </button>
+        {cognito && (
+          <div className="flex justify-between text-sm">
+            <Link to="/registro">Crear cuenta</Link>
+            <Link to="/recuperar">¿Olvidaste tu contraseña?</Link>
+          </div>
+        )}
       </form>
     </div>
   );
