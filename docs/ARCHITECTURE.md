@@ -4,11 +4,11 @@
 
 The SPA is served by nginx (`statline/web`, port 8080). In AKS the Ingress routes `/api` to the api Service and `/` to this image, so requests are same-origin and the API needs no CORS. Locally Vite proxies `/api` to `http://localhost:3000`.
 
-**Runtime config and Sentry (D-07).** `index.html` loads `/config.js` before the app. The repo's `public/config.js` is empty, and in Kubernetes the chart mounts one per namespace, with `sentryDsn` and `sentryEnvironment`, so one image serves both environments. `src/lib/sentry.ts` starts `@sentry/react` only when a DSN is set, and `main.tsx` wraps the router in `Sentry.ErrorBoundary`. The Sentry release is `VITE_SENTRY_RELEASE`, the commit the bundle was built from (Dockerfile build arg). In CD, with the `SENTRY_AUTH_TOKEN` build secret, the build uploads hidden source maps under that release and deletes them from `dist/`. Repo settings: secret `SENTRY_AUTH_TOKEN`, variables `SENTRY_ORG` and `SENTRY_PROJECT` (default `statline-web`).
+**Runtime config and Sentry (D-07).** `index.html` loads `/config.js` before the app. The repo's `public/config.js` is empty, and in Kubernetes the chart mounts one per namespace, with `sentryDsn` and `sentryEnvironment` (and the Cognito pool with `auth.mode: cognito`, D-08), so one image serves both environments. `src/lib/sentry.ts` starts `@sentry/react` only when a DSN is set, and `main.tsx` wraps the router in `Sentry.ErrorBoundary`. The Sentry release is `VITE_SENTRY_RELEASE`, the commit the bundle was built from (Dockerfile build arg). In CD, with the `SENTRY_AUTH_TOKEN` build secret, the build uploads hidden source maps under that release and deletes them from `dist/`. Repo settings: secret `SENTRY_AUTH_TOKEN`, variables `SENTRY_ORG` and `SENTRY_PROJECT` (default `statline-web`).
 
 ## 2. Routing
 
-`src/app/routes.tsx` is the single route table. Every screen is lazy-loaded. `/login` is public; everything else is wrapped in `RequireAuth` + `Layout`. Unknown paths render `NoEncontrado`.
+`src/app/routes.tsx` is the single route table. Every screen is lazy-loaded. `/login`, `/registro` and `/recuperar` are public (the last two only in Cognito mode; otherwise they send to `/login`); everything else is wrapped in `RequireAuth` + `Layout`. Unknown paths render `NoEncontrado`.
 
 ## 3. Data fetching
 
@@ -19,6 +19,18 @@ The SPA is served by nginx (`statline/web`, port 8080). In AKS the Ingress route
 ## 4. Auth
 
 `AuthProvider` owns the token store (localStorage, every access guarded) and the current user. `login()` stores tokens and user; `logout()` clears them and the query cache. Tokens in localStorage are an accepted trade-off for a course project (D-03).
+
+**Two modes, chosen at runtime by `/config.js` (D-08).**
+
+|                | Local (no pool in `/config.js`: `pnpm dev`, tests, k3d) | Cognito (`cognitoUserPoolId` and `cognitoClientId` set by the chart, statline-infra D-47)                                  |
+| -------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| Sign-in        | `POST /api/auth/login`                                  | `src/auth/cognito.ts` → Amplify v6 `signIn` (SRP); then `GET /api/usuarios/me` for our id, name and role (backend D-41)    |
+| Bearer         | our access token                                        | the Cognito **ID token**                                                                                                   |
+| On a 401       | `POST /api/auth/refresh` once                           | `fetchAuthSession({ forceRefresh: true })` once (the `refresh` option of `createApiClient`)                                |
+| Sign-up, reset | none                                                    | `/registro` (account, then the emailed code, then signs in) and `/recuperar` (code and new password); linked from `/login` |
+| Logout         | clears the session                                      | also `signOut()` in Amplify                                                                                                |
+
+`main.tsx` imports `src/auth/cognito.ts` (and Amplify, about 39 kB gzipped) only when the pool is configured, so local mode does not download it. Cognito errors are shown as Spanish messages (`traducir`).
 
 ## 5. API contract
 
@@ -47,6 +59,7 @@ Writes for lists and alerts: `ListaSeguimiento` mutations invalidate the `["list
 - `/listas` (`features/listas/ListasPage.tsx`): owner's watchlists with pagination (`?page=`) and a create form that opens the new list.
 - `/listas/:id` (`features/listas/ListaDetallePage.tsx`): rename, delete (confirmed), elements with remove (confirmed), add a jugador through the search picker (`components/SelectorJugador.tsx`) or add a team from the team list.
 - `/alertas` (`features/alertas/AlertasPage.tsx`): alerts with an activa switch (PUT `{activa}`), delete (confirmed) and a create form (`FormularioAlerta.tsx`) whose fields follow `tipo`. Rules live in `features/alertas/validacion.ts` and mirror the backend: LESION needs a jugador, INICIO_PARTIDO a jugador or equipo, UMBRAL a jugador, a metric of its sport (from `partidos/metricas.ts`), an operator and a number.
+- `/usuarios` (`features/usuarios/UsuariosPage.tsx`, ADMIN only; the nav link shows only to ADMIN and other roles get a notice without calling the api): users with pagination (`?page=`), a role select per user (`PUT /api/usuarios/:id {rol}`) and delete (confirmed; it removes their lists and alerts). The admin's own row can be neither demoted nor deleted, so it cannot lock itself out. In Cognito mode a deleted user's sign-in account remains and comes back as USUARIO (backend D-41).
 
 ## 7. Styling
 

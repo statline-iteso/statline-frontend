@@ -6,6 +6,7 @@ import type { Tokens, TokenStore } from "../api/client";
 import type { Usuario } from "../api/types";
 import { routes } from "../app/routes";
 import { AuthProvider } from "../auth/AuthProvider";
+import type { ProveedorCognito } from "../auth/cognito";
 
 export const USUARIO: Usuario = {
   id: "u1",
@@ -54,6 +55,7 @@ export function renderApp(opts: {
   fetchFn: typeof fetch;
   loggedIn?: boolean;
   usuario?: Usuario;
+  cognito?: ProveedorCognito;
 }) {
   if (opts.loggedIn !== false) {
     window.localStorage.setItem("statline.usuario", JSON.stringify(opts.usuario ?? USUARIO));
@@ -64,7 +66,7 @@ export function renderApp(opts: {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const utils = render(
     <QueryClientProvider client={queryClient}>
-      <AuthProvider tokens={tokens} fetchFn={opts.fetchFn}>
+      <AuthProvider tokens={tokens} fetchFn={opts.fetchFn} cognito={opts.cognito}>
         <MemoryRouter initialEntries={[opts.path]}>
           <App />
         </MemoryRouter>

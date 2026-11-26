@@ -35,8 +35,10 @@ import type {
   PronosticoPartido,
   ProyeccionJugador,
   ReentrenarRespuesta,
+  Rol,
   Tendencia,
   TipoInferencia,
+  UsuarioAdmin,
 } from "./types";
 
 /** Query keys in one place so mutations (and the ingestion refresh) can invalidate them. */
@@ -61,6 +63,7 @@ export const keys = {
   listas: (f: { page: number }) => ["listas", f] as const,
   lista: (id: string) => ["listas", id] as const,
   alertas: (f: { page: number }) => ["alertas", f] as const,
+  usuarios: (f: { page: number }) => ["usuarios", f] as const,
 };
 
 /** Player comparison accepts between 2 and 4 players (the API answers 400 otherwise). */
@@ -269,6 +272,29 @@ export function useActualizarAlerta() {
       api.put<Alerta>(`/api/alertas/${v.id}`, v.body),
     [["alertas"]],
   );
+}
+
+/** ADMIN only: every user, newest first. */
+export function useUsuarios(f: { page: number }, enabled = true) {
+  const api = useApi();
+  return useQuery({
+    enabled,
+    queryKey: keys.usuarios(f),
+    queryFn: () => api.get<Paginado<UsuarioAdmin>>("/api/usuarios", { ...f, pageSize: 20 }),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useCambiarRol() {
+  return useApiMutation(
+    (api, v: { id: string; rol: Rol }) =>
+      api.put<UsuarioAdmin>(`/api/usuarios/${v.id}`, { rol: v.rol }),
+    [["usuarios"]],
+  );
+}
+
+export function useEliminarUsuario() {
+  return useApiMutation((api, id: string) => api.delete(`/api/usuarios/${id}`), [["usuarios"]]);
 }
 
 export function useEliminarAlerta() {

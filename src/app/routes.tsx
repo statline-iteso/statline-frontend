@@ -9,6 +9,12 @@ import { NoEncontrado } from "./NoEncontrado";
 const LoginPage = lazy(() =>
   import("../features/login/LoginPage").then((m) => ({ default: m.LoginPage })),
 );
+const RegistroPage = lazy(() =>
+  import("../features/login/RegistroPage").then((m) => ({ default: m.RegistroPage })),
+);
+const RecuperarPage = lazy(() =>
+  import("../features/login/RecuperarPage").then((m) => ({ default: m.RecuperarPage })),
+);
 const LigasPage = lazy(() =>
   import("../features/ligas/LigasPage").then((m) => ({ default: m.LigasPage })),
 );
@@ -41,6 +47,10 @@ const AlertasPage = lazy(() =>
   import("../features/alertas/AlertasPage").then((m) => ({ default: m.AlertasPage })),
 );
 
+const UsuariosPage = lazy(() =>
+  import("../features/usuarios/UsuariosPage").then((m) => ({ default: m.UsuariosPage })),
+);
+
 const CompararPage = lazy(() =>
   import("../features/comparar/CompararPage").then((m) => ({ default: m.CompararPage })),
 );
@@ -49,6 +59,8 @@ const s = (node: ReactNode) => <Suspense fallback={<Cargando />}>{node}</Suspens
 
 export const routes: RouteObject[] = [
   { path: "/login", element: s(<LoginPage />) },
+  { path: "/registro", element: s(<RegistroPage />) },
+  { path: "/recuperar", element: s(<RecuperarPage />) },
   {
     path: "/",
     element: (
@@ -69,6 +81,7 @@ export const routes: RouteObject[] = [
       { path: "listas", element: s(<ListasPage />) },
       { path: "listas/:id", element: s(<ListaDetallePage />) },
       { path: "alertas", element: s(<AlertasPage />) },
+      { path: "usuarios", element: s(<UsuariosPage />) },
       { path: "*", element: <NoEncontrado /> },
     ],
   },

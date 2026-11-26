@@ -4,6 +4,10 @@ import * as Sentry from "@sentry/react";
 export interface ConfigRuntime {
   sentryDsn?: string;
   sentryEnvironment?: string;
+  /** Cognito pool of this environment (statline-infra D-47); absent: the api's own login. */
+  cognitoRegion?: string;
+  cognitoUserPoolId?: string;
+  cognitoClientId?: string;
 }
 
 declare global {
