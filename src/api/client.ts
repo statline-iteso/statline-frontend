@@ -34,7 +34,8 @@ export interface ApiClient {
 }
 
 /**
- * Thin fetch wrapper. Adds the bearer token, and on a 401 tries POST /api/auth/refresh once
+ * Thin fetch wrapper. Adds the bearer token, and on a 401 tries POST /api/auth/refresh (or the
+ * `refresh` option) once
  * (sharing one in-flight refresh between concurrent requests) before giving up and clearing
  * the session.
  */
@@ -43,6 +44,8 @@ export function createApiClient(opts: {
   tokens: TokenStore;
   onSessionExpired?: () => void;
   fetchFn?: typeof fetch;
+  /** Replaces POST /api/auth/refresh, e.g. a Cognito token refresh. Null: the session is over. */
+  refresh?: () => Promise<Tokens | null>;
 }): ApiClient {
   const baseUrl = opts.baseUrl ?? "";
   const doFetch = opts.fetchFn ?? ((...args: Parameters<typeof fetch>) => fetch(...args));
@@ -60,6 +63,11 @@ export function createApiClient(opts: {
   const refresh = async (): Promise<boolean> => {
     const current = opts.tokens.get();
     if (!current) return false;
+    if (opts.refresh) {
+      const nuevos = await opts.refresh().catch(() => null);
+      if (nuevos) opts.tokens.set(nuevos);
+      return nuevos !== null;
+    }
     const res = await doFetch(url("/api/auth/refresh"), {
       method: "POST",
       headers: { "Content-Type": "application/json" },
