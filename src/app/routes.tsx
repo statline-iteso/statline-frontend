@@ -47,6 +47,10 @@ const AlertasPage = lazy(() =>
   import("../features/alertas/AlertasPage").then((m) => ({ default: m.AlertasPage })),
 );
 
+const UsuariosPage = lazy(() =>
+  import("../features/usuarios/UsuariosPage").then((m) => ({ default: m.UsuariosPage })),
+);
+
 const CompararPage = lazy(() =>
   import("../features/comparar/CompararPage").then((m) => ({ default: m.CompararPage })),
 );
@@ -77,6 +81,7 @@ export const routes: RouteObject[] = [
       { path: "listas", element: s(<ListasPage />) },
       { path: "listas/:id", element: s(<ListaDetallePage />) },
       { path: "alertas", element: s(<AlertasPage />) },
+      { path: "usuarios", element: s(<UsuariosPage />) },
       { path: "*", element: <NoEncontrado /> },
     ],
   },

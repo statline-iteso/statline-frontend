@@ -12,6 +12,12 @@ export interface Usuario {
   rol: Rol;
 }
 
+/** A user as GET /api/usuarios returns it (ADMIN only). */
+export interface UsuarioAdmin extends Usuario {
+  creadoEn: string;
+  actualizadoEn: string;
+}
+
 export interface Paginado<T> {
   data: T[];
   total: number;

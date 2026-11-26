@@ -1,5 +1,6 @@
 import { NavLink, Outlet } from "react-router-dom";
 import { useAuth } from "../auth/useAuth";
+import { esAdmin } from "../auth/roles";
 
 const ENLACES = [
   { to: "/ligas", texto: "Ligas" },
@@ -13,13 +14,16 @@ const ENLACES = [
 
 export function Layout() {
   const { usuario, logout } = useAuth();
+  const enlaces = esAdmin(usuario?.rol)
+    ? [...ENLACES, { to: "/usuarios", texto: "Usuarios" }]
+    : ENLACES;
   return (
     <div className="min-h-screen">
       <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-3">
           <span className="text-lg font-bold tracking-tight">StatLine</span>
           <nav className="flex flex-1 gap-1">
-            {ENLACES.map((e) => (
+            {enlaces.map((e) => (
               <NavLink
                 key={e.to}
                 to={e.to}
